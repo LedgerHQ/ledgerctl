@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package bluehsmserver;
+
+message Parameter {
+    string name = 1;
+    string alias = 2;
+    bool local = 3;
+}
+
+message Request {
+    string id = 1;
+    bytes parameters = 2;
+    string reference = 3;
+    bytes elf = 4;
+    bool close = 5;
+    bool largeStack = 6;
+    repeated Parameter remote_parameters = 7;
+}
+
+message Response {
+    string id = 1;
+    bytes response = 2;
+    string message = 3;
+    string exception = 4;
+}
