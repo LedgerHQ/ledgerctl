@@ -8,7 +8,8 @@ from construct import (Hex, Struct, FlagsEnum, Int32ub, Int32ul, Int8ub, Bytes, 
 from intelhex import IntelHex
 # from ledgerwallet.transport.u2f import getDongle
 # from ledgerwallet.transport.bridge import getDongle
-from ledgerwallet.transport.hid import getDongle
+from ledgerwallet.transport.hid import HidDevice
+# from ledgerwallet.transport.tcp import getDongle
 from ledgerwallet.crypto.ecc import PrivateKey
 
 from ledgerwallet.manifest import AppManifest
@@ -131,8 +132,8 @@ LOG = logging.getLogger("ledgerwallet")
 
 
 class LedgerClient(object):
-    def __init__(self, cla=0xe0, private_key=None):
-        self.device = getDongle()
+    def __init__(self, device, cla=0xe0, private_key=None):
+        self.device = device
         self.cla = cla
         self._target_id = None
         self.scp = None
@@ -140,6 +141,7 @@ class LedgerClient(object):
             self.private_key = PrivateKey()
         else:
             self.private_key = PrivateKey(private_key)
+        device.open()
 
     def raw_exchange(self, data: bytes) -> bytes:
         LOG.debug("=> " + data.hex())
@@ -221,6 +223,7 @@ class LedgerClient(object):
 
         load_size = end_addr - start_addr
         max_load_size = 0xf0 - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH - SCP_MAC_LENGTH
+        max_load_size = 0x80
 
         load_address = start_addr
         while load_size > 0:

@@ -5,6 +5,7 @@ import click
 from tabulate import tabulate
 
 from ledgerwallet.client import LedgerClient, CommException
+from ledgerwallet.transport import enumerate_devices
 from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
 from ledgerwallet import utils
@@ -28,7 +29,8 @@ def cli(ctx, verbose):
             private_key = bytes.fromhex(default_config['private_key'])
         except:
             private_key = bytes.fromhex("5244aa214e6190220583754f80eb80e9d2b04a94c2c551e882f5c37a97077ab2")
-        return LedgerClient(private_key=private_key)
+        devices = enumerate_devices()
+        return LedgerClient(devices[0], private_key=private_key)
     ctx.obj = get_client
 
 

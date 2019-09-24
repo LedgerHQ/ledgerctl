@@ -1,10 +1,26 @@
+import os
 import socket
 
 
 class TcpDevice(object):
-    def __init__(self, server: str, port: int):
+    LEDGER_PROXY_ADDRESS = "127.0.0.1"
+    LEDGER_PROXY_PORT = 1237
+
+    def __init__(self, path: str):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((server, port))
+        server, port = path.split(":")
+        self.server = server
+        self.port = int(port)
+
+    @classmethod
+    def enumerate_devices(cls):
+        if "LEDGER_PROXY_ADDRESS" in os.environ and "LEDGER_PROXY_ADDRESS" in os.environ:
+            return [TcpDevice("{0:s}:{1:d}".format(os.environ["LEDGER_PROXY_ADDRESS"], os.environ["LEDGER_PROXY_PORT"]))]
+        else:
+            return [TcpDevice("{0:s}:{1:d}".format(TcpDevice.LEDGER_PROXY_ADDRESS, TcpDevice.LEDGER_PROXY_PORT))]
+
+    def open(self):
+        self.socket.connect((self.server, self.port))
 
     def write(self, data: bytes):
         # data is prefixed by its size
@@ -21,7 +37,3 @@ class TcpDevice(object):
 
     def close(self):
         self.socket.close()
-
-
-def getDongle(server: str = "localhost", port: int = 1237):
-    return TcpDevice(server, port)

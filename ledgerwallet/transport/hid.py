@@ -5,8 +5,28 @@ LEDGER_VENDOR_ID = 0x2c97
 
 
 class HidDevice(object):
-    def __init__(self, device):
-        self.device = device
+    def __init__(self, path):
+        self.path = path
+        self.device = None
+        self.opened = False
+
+    @classmethod
+    def enumerate_devices(cls):
+        devices = []
+        for hidDevice in hid.enumerate(LEDGER_VENDOR_ID, 0):
+            if ('interface_number' in hidDevice and hidDevice['interface_number'] == 0) or (
+                    'usage_page' in hidDevice and hidDevice['usage_page'] == 0xffa0):
+                hid_device_path = hidDevice['path']
+                devices.append(HidDevice(hid_device_path))
+        return devices
+
+    def get_name(self):
+        return "hid:{}".format(self.path.decode())
+
+    def open(self):
+        self.device = hid.device()
+        self.device.open_path(self.path)
+        self.device.set_nonblocking(True)
         self.opened = True
 
     def write(self, data):
@@ -56,7 +76,7 @@ class HidDevice(object):
                 pass
         self.opened = False
 
-
+"""
 def getDongle():
     hid_device_path = None
     for hidDevice in hid.enumerate(LEDGER_VENDOR_ID, 0):
@@ -69,3 +89,4 @@ def getDongle():
         dev.set_nonblocking(True)
         return HidDevice(dev)
     raise Exception("No dongle found")
+"""
