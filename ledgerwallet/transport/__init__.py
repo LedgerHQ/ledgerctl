@@ -4,7 +4,6 @@ from .tcp import TcpDevice
 
 def enumerate_devices():
     devices = []
-    for cls in (HidDevice, TcpDevice):
+    for cls in [TcpDevice, HidDevice]:
         devices.extend(cls.enumerate_devices())
     return devices
-

@@ -226,5 +226,16 @@ def info(connect):
         click.echo("Device is running in RECOVERY mode.")
 
 
+@cli.command("upgrade-firmware", help="Upgrade firmware.")
+@click.argument("firmware_name")
+@click.argument("firmware_key")
+@click.argument("perso_key")
+@click.argument("url", required=False)
+@click.pass_obj
+def upgrade_firmware(connect, firmware_name, firmware_key, perso_key, url):
+    client = connect()
+    client.upgrade_firmware(firmware_name, firmware_key, perso_key, url)
+
+
 if __name__ == '__main__':
     cli()

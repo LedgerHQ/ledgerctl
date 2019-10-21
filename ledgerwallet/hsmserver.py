@@ -41,11 +41,12 @@ class HsmServer(LedgerServer):
 
         req = requests.post(self.url, request.SerializeToString())
         response = Response()
+        # TODO: handle errors
         response.ParseFromString(req.content)
 
         self.last_request_id = response.id
         if len(response.exception) != 0:
-            raise Exception("HSM Error: {}", response.exception)
+            raise Exception(f"HSM Error: {response.exception}")
         return response.response
 
     def send_nonce(self, nonce: bytes):

@@ -14,10 +14,12 @@ class TcpDevice(object):
 
     @classmethod
     def enumerate_devices(cls):
-        if "LEDGER_PROXY_ADDRESS" in os.environ and "LEDGER_PROXY_ADDRESS" in os.environ:
-            return [TcpDevice("{0:s}:{1:d}".format(os.environ["LEDGER_PROXY_ADDRESS"], os.environ["LEDGER_PROXY_PORT"]))]
+        if "LEDGER_PROXY_ADDRESS" in os.environ and "LEDGER_PROXY_PORT" in os.environ:
+            return [TcpDevice("{0:s}:{1:d}".format(
+                os.environ["LEDGER_PROXY_ADDRESS"],
+                int(os.environ["LEDGER_PROXY_PORT"])))]
         else:
-            return [TcpDevice("{0:s}:{1:d}".format(TcpDevice.LEDGER_PROXY_ADDRESS, TcpDevice.LEDGER_PROXY_PORT))]
+            return []
 
     def open(self):
         self.socket.connect((self.server, self.port))

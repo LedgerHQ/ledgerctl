@@ -1,4 +1,4 @@
-# from dataclasses import dataclass
+import enum
 import logging
 import struct
 from typing import Union
@@ -6,12 +6,8 @@ from typing import Union
 from construct import (Hex, Struct, FlagsEnum, Int32ub, Int32ul, Int8ub, Bytes, Const, PascalString, Rebuild,
                        GreedyRange, Optional, len_, this)
 from intelhex import IntelHex
-# from ledgerwallet.transport.u2f import getDongle
-# from ledgerwallet.transport.bridge import getDongle
-from ledgerwallet.transport.hid import HidDevice
-# from ledgerwallet.transport.tcp import getDongle
-from ledgerwallet.crypto.ecc import PrivateKey
 
+from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
 from ledgerwallet.crypto.scp import SCP
 from ledgerwallet.utils import serialize
@@ -21,31 +17,35 @@ from ledgerwallet.simpleserver import SimpleServer
 from ledgerwallet.hsmscript import HsmScript
 from ledgerwallet.hsmserver import HsmServer
 
-INS_SECUINS = 0
-INS_GET_VERSION = 1
-INS_VALIDATE_TARGET_ID = 4
-INS_INITIALIZE_AUTHENTICATION = 0x50
-INS_VALIDATE_CERTIFICATE = 0x51
-INS_GET_CERTIFICATE = 0x52
-INS_MUTUAL_AUTHENTICATE = 0x53
-INS_RUN_APP = 0xd8
-# Commands for custom endorsement
-INS_ENDORSE_SET_START = 0xc0
-INS_ENDORSE_SET_COMMIT = 0xc2
 
-SECUREINS_SET_LOAD_OFFSET = 5
-SECUREINS_LOAD = 6
-SECUREINS_COMMIT = 9
-SECUREINS_CREATE_APP = 11
-SECUREINS_DELETE_APP = 12
-SECUREINS_LIST_APPS = 14
-SECUREINS_LIST_APPS_CONTINUE = 15
-SECUREINS_GET_VERSION = 16
-SECUREINS_GET_MEMORY_INFORMATION = 17
-SECUREINS_SETUP_CUSTOM_CERTIFICATE = 18
-SECUREINS_RESET_CUSTOM_CERTIFICATE = 19
-SECUREINS_DELETE_APP_BY_HASH = 21
-SECUREINS_MCU_BOOTLOADER = 0xb0
+class LedgerIns(enum.IntEnum):
+    SECUINS = 0
+    GET_VERSION = 1
+    VALIDATE_TARGET_ID = 4
+    INITIALIZE_AUTHENTICATION = 0x50
+    VALIDATE_CERTIFICATE = 0x51
+    GET_CERTIFICATE = 0x52
+    MUTUAL_AUTHENTICATE = 0x53
+    RUN_APP = 0xd8
+    # Commands for custom endorsement
+    ENDORSE_SET_START = 0xc0
+    ENDORSE_SET_COMMIT = 0xc2
+
+
+class LedgerSecureIns(enum.IntEnum):
+    SET_LOAD_OFFSET = 5
+    LOAD = 6
+    COMMIT = 9
+    CREATE_APP = 11
+    DELETE_APP = 12
+    LIST_APPS = 14
+    LIST_APPS_CONTINUE = 15
+    GET_VERSION = 16
+    GET_MEMORY_INFORMATION = 17
+    SETUP_CUSTOM_CERTIFICATE = 18
+    RESET_CUSTOM_CERTIFICATE = 19
+    DELETE_APP_BY_HASH = 21
+    MCU_BOOTLOADER = 0xb0
 
 
 LOAD_SEGMENT_CHUNK_HEADER_LENGTH = 3
@@ -79,24 +79,6 @@ VersionInfo = Struct(
     mcu_version=PascalString(Int8ub, "utf-8"),
     mcu_hash=Optional(Bytes(32))
 )
-
-"""
-@dataclass
-class AppInfo:
-    name: str
-    flags: int
-    code_data_hash: bytes
-    full_hash: bytes
-
-
-@dataclass
-class MemoryInfo:
-    system_size: int
-    applications_size: int
-    free_size: int
-    used_app_slots: int
-    num_app_slots: int
-"""
 
 
 class AppInfo(object):
@@ -178,7 +160,7 @@ class LedgerClient(object):
             secret = self.authenticate(server)
             self.scp = SCP(secret)
 
-        data = self.apdu_exchange(INS_SECUINS, self.scp.wrap(bytes([ins]) + data), sw1, sw2)
+        data = self.apdu_exchange(LedgerIns.SECUINS, self.scp.wrap(bytes([ins]) + data), sw1, sw2)
         return self.scp.unwrap(data)
 
     def authenticate(self, server: LedgerServer):
@@ -188,7 +170,7 @@ class LedgerClient(object):
 
         # Exchange nonce
         server_nonce = server.get_nonce()
-        data = self.apdu_exchange(INS_INITIALIZE_AUTHENTICATION, server_nonce)
+        data = self.apdu_exchange(LedgerIns.INITIALIZE_AUTHENTICATION, server_nonce)
         device_nonce = data[4:12]
         server.send_nonce(device_nonce)
 
@@ -196,33 +178,33 @@ class LedgerClient(object):
         server_chain = server.receive_certificate_chain()
         for i in range(len(server_chain)):
             if i == len(server_chain) - 1:
-                self.apdu_exchange(INS_VALIDATE_CERTIFICATE, server_chain[i], sw1=0x80)
+                self.apdu_exchange(LedgerIns.VALIDATE_CERTIFICATE, server_chain[i], sw1=0x80)
             else:
-                self.apdu_exchange(INS_VALIDATE_CERTIFICATE, server_chain[i])
+                self.apdu_exchange(LedgerIns.VALIDATE_CERTIFICATE, server_chain[i])
 
         # Walk the client chain
         client_chain = []
         for i in range(2):
             if i == 0:
-                certificate = self.apdu_exchange(INS_GET_CERTIFICATE)
+                certificate = self.apdu_exchange(LedgerIns.GET_CERTIFICATE)
             else:
-                certificate = self.apdu_exchange(INS_GET_CERTIFICATE, sw1=0x80)
+                certificate = self.apdu_exchange(LedgerIns.GET_CERTIFICATE, sw1=0x80)
             if len(certificate) == 0:
                 break
             client_chain.append(certificate)
         server.send_certicate_chain(client_chain)
 
         # Mutual authentication done, retrieve shared secret
-        self.apdu_exchange(INS_MUTUAL_AUTHENTICATE)
+        self.apdu_exchange(LedgerIns.MUTUAL_AUTHENTICATE)
         return server.get_shared_secret()
 
     def _load_segment(self, hex_file: IntelHex, segment):
         start_addr, end_addr = segment
         segment_load_address = start_addr - hex_file.minaddr()
-        self.apdu_secure_exchange(SECUREINS_SET_LOAD_OFFSET, struct.pack('>I', segment_load_address))
+        self.apdu_secure_exchange(LedgerSecureIns.SET_LOAD_OFFSET, struct.pack('>I', segment_load_address))
 
         load_size = end_addr - start_addr
-        max_load_size = 0xf0 - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH - SCP_MAC_LENGTH
+        # max_load_size = 0xf0 - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH - SCP_MAC_LENGTH
         max_load_size = 0x80
 
         load_address = start_addr
@@ -231,7 +213,7 @@ class LedgerClient(object):
             data = hex_file.gets(load_address, chunk_size)
             data = struct.pack('>H', load_address - start_addr) + data
 
-            self.apdu_secure_exchange(SECUREINS_LOAD, data)
+            self.apdu_secure_exchange(LedgerSecureIns.LOAD, data)
             load_address += chunk_size
             load_size -= chunk_size
 
@@ -249,19 +231,19 @@ class LedgerClient(object):
         main_address = hex_file.start_addr['EIP'] - hex_file.minaddr()
 
         data = struct.pack('>IIIII', code_length, data_length, len(params), flags, main_address)
-        self.apdu_secure_exchange(SECUREINS_CREATE_APP, data)
+        self.apdu_secure_exchange(LedgerSecureIns.CREATE_APP, data)
 
         hex_file.puts(hex_file.maxaddr() + 1, params)
 
         for segment in hex_file.segments():
             self._load_segment(hex_file, segment)
-        self.apdu_secure_exchange(SECUREINS_COMMIT)
+        self.apdu_secure_exchange(LedgerSecureIns.COMMIT)
 
     def delete_app(self, app: Union[str, bytes]):
         if isinstance(app, str):
-            self.apdu_secure_exchange(SECUREINS_DELETE_APP, serialize(app.encode()))
+            self.apdu_secure_exchange(LedgerSecureIns.DELETE_APP, serialize(app.encode()))
         elif isinstance(app, bytes) and len(app) == 32:
-            self.apdu_secure_exchange(SECUREINS_DELETE_APP_BY_HASH, app)
+            self.apdu_secure_exchange(LedgerSecureIns.DELETE_APP_BY_HASH, app)
         else:
             raise TypeError("app parameter must be string or digest")
 
@@ -276,6 +258,23 @@ class LedgerClient(object):
             apdu_len = application_data[offset + 4]
             self.raw_exchange(application_data[offset:offset + 5 + apdu_len])
             offset += 5 + apdu_len
+
+    def upgrade_firmware(self, firmware_name, firmware_key, perso_key, url=None):
+        if url is None:
+            url = LEDGER_HSM_URL
+        script = HsmScript("distributeFirmware11_scan", {"persoKey": perso_key, "scpv2": "dummy"})
+        server = HsmServer(script, url)
+        self.authenticate(server)
+
+        response = b''
+        for i in range(100):
+            app_data = server.query(data=None if len(response) < 2 else b'\xff\xff' + response[:-2])
+            if len(app_data) == 0:
+                break
+            response = self.raw_exchange(app_data)
+
+        application_data = server.query(params={"firmware": firmware_name, "firmwareKey": firmware_key})
+        # Stop here, sending app data to the device is not needed for load testing
 
     def genuine_check(self, url=LEDGER_HSM_URL):
         script = HsmScript("checkGenuine", {"persoKey": "perso_11", "scpv2": "dummy"})
@@ -299,40 +298,40 @@ class LedgerClient(object):
         self.authenticate(server)
         server.query()  # Commit agreement
 
-        data = self.apdu_exchange(INS_ENDORSE_SET_START, sw1=key_id)
+        data = self.apdu_exchange(LedgerIns.ENDORSE_SET_START, sw1=key_id)
         certificate = server.query(data, params={"endorsementKey": "attest_1"})
 
         # Commit endorsement certificate
-        self.apdu_exchange(INS_ENDORSE_SET_COMMIT, certificate)
+        self.apdu_exchange(LedgerIns.ENDORSE_SET_COMMIT, certificate)
         return True
 
     def install_ca(self, name: str, public_key: bytes):
         data = serialize(name.encode()) + serialize(public_key)
-        self.apdu_secure_exchange(SECUREINS_SETUP_CUSTOM_CERTIFICATE, data)
+        self.apdu_secure_exchange(LedgerSecureIns.SETUP_CUSTOM_CERTIFICATE, data)
 
     def delete_ca(self):
-        return self.apdu_secure_exchange(SECUREINS_RESET_CUSTOM_CERTIFICATE)
+        return self.apdu_secure_exchange(LedgerSecureIns.RESET_CUSTOM_CERTIFICATE)
 
     def get_version_info(self):
-        data = self.apdu_exchange(INS_GET_VERSION)
+        data = self.apdu_exchange(LedgerIns.GET_VERSION)
         version_info = VersionInfo.parse(data)
         self._target_id = version_info.target_id
         return version_info
 
     def get_version_info_secure(self):
-        data = self.apdu_secure_exchange(SECUREINS_GET_VERSION)
+        data = self.apdu_secure_exchange(LedgerSecureIns.GET_VERSION)
         version_info = VersionInfo.parse(data)
         self._target_id = version_info.target_id
         return version_info
 
     def validate_target_id(self, target_id: int):
-        self.apdu_exchange(INS_VALIDATE_TARGET_ID, struct.pack('>I', target_id))
+        self.apdu_exchange(LedgerIns.VALIDATE_TARGET_ID, struct.pack('>I', target_id))
 
     def reset(self):
         return self.validate_target_id(self.target_id)
 
     def get_memory_info(self) -> MemoryInfo:
-        response = self.apdu_secure_exchange(SECUREINS_GET_MEMORY_INFORMATION)
+        response = self.apdu_secure_exchange(LedgerSecureIns.GET_MEMORY_INFORMATION)
         assert len(response) == 20
 
         return MemoryInfo(*struct.unpack('>IIIII', response))
@@ -345,12 +344,12 @@ class LedgerClient(object):
 
     @property
     def apps(self):
-        data = self.apdu_secure_exchange(SECUREINS_LIST_APPS)
+        data = self.apdu_secure_exchange(LedgerSecureIns.LIST_APPS)
         while len(data) != 0:
             response = ApduListAppsResponse.parse(data)
             for app in response.apps:
                 yield AppInfo(app.name, app.flags & 0xffff, app.code_data_hash, app.full_hash)
-            data = self.apdu_secure_exchange(SECUREINS_LIST_APPS_CONTINUE)
+            data = self.apdu_secure_exchange(LedgerSecureIns.LIST_APPS_CONTINUE)
 
     def run_app(self, app_name: str):
-        return self.apdu_exchange(INS_RUN_APP, app_name.encode())
+        return self.apdu_exchange(LedgerSecureIns.INS_RUN_APP, app_name.encode())

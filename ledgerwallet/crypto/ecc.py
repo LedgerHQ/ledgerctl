@@ -46,7 +46,7 @@ class PrivateKey(object):
         if not raw:
             signature = self.sk.sign(msg, hashfunc=hashfunc, sigencode=ecdsa.util.sigencode_der_canonize)
         else:
-            signature = self.sk.sign_digest(msg, hashfunc=hashfunc, sigencode=ecdsa.util.sigencode_der_canonize)
+            signature = self.sk.sign_digest(msg, sigencode=ecdsa.util.sigencode_der_canonize)
         return signature
 
     def exchange(self, public_key: PublicKey) -> bytes:
