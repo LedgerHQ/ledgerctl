@@ -35,6 +35,7 @@ class LedgerIns(enum.IntEnum):
 class LedgerSecureIns(enum.IntEnum):
     SET_LOAD_OFFSET = 5
     LOAD = 6
+    FLUSH = 7
     COMMIT = 9
     CREATE_APP = 11
     DELETE_APP = 12
@@ -267,14 +268,18 @@ class LedgerClient(object):
         self.authenticate(server)
 
         response = b''
-        for i in range(100):
+        while True:
             app_data = server.query(data=None if len(response) < 2 else b'\xff\xff' + response[:-2])
             if len(app_data) == 0:
                 break
             response = self.raw_exchange(app_data)
 
         application_data = server.query(params={"firmware": firmware_name, "firmwareKey": firmware_key})
-        # Stop here, sending app data to the device is not needed for load testing
+        offset = 0
+        while offset < len(application_data):
+            apdu_len = application_data[offset + 4]
+            self.raw_exchange(application_data[offset:offset + 5 + apdu_len])
+            offset += 5 + apdu_len
 
     def genuine_check(self, url=LEDGER_HSM_URL):
         script = HsmScript("checkGenuine", {"persoKey": "perso_11", "scpv2": "dummy"})
