@@ -17,6 +17,8 @@ from ledgerwallet.simpleserver import SimpleServer
 from ledgerwallet.hsmscript import HsmScript
 from ledgerwallet.hsmserver import HsmServer
 
+from ledgerwallet.proto.listApps_pb2 import AppList
+
 
 class LedgerIns(enum.IntEnum):
     SECUINS = 0
@@ -36,6 +38,7 @@ class LedgerSecureIns(enum.IntEnum):
     SET_LOAD_OFFSET = 5
     LOAD = 6
     FLUSH = 7
+    CRC = 8
     COMMIT = 9
     CREATE_APP = 11
     DELETE_APP = 12
@@ -83,11 +86,12 @@ VersionInfo = Struct(
 
 
 class AppInfo(object):
-    def __init__(self, name: str, flags: int, code_data_hash: bytes, full_hash: bytes):
+    def __init__(self, name: str, flags: int, code_data_hash: bytes, full_hash: bytes, data: bytes = None):
         self.name = name
         self.flags = flags
         self.code_data_hash = code_data_hash
         self.full_hash = full_hash
+        self.data = data
 
 
 class MemoryInfo:
@@ -260,9 +264,7 @@ class LedgerClient(object):
             self.raw_exchange(application_data[offset:offset + 5 + apdu_len])
             offset += 5 + apdu_len
 
-    def upgrade_firmware(self, firmware_name, firmware_key, perso_key, url=None):
-        if url is None:
-            url = LEDGER_HSM_URL
+    def upgrade_firmware(self, firmware_name, firmware_key, perso_key, url=LEDGER_HSM_URL):
         script = HsmScript("distributeFirmware11_scan", {"persoKey": perso_key, "scpv2": "dummy"})
         server = HsmServer(script, url)
         self.authenticate(server)
@@ -281,7 +283,7 @@ class LedgerClient(object):
             self.raw_exchange(application_data[offset:offset + 5 + apdu_len])
             offset += 5 + apdu_len
 
-    def genuine_check(self, url=LEDGER_HSM_URL):
+    def genuine_check(self, url=None):
         script = HsmScript("checkGenuine", {"persoKey": "perso_11", "scpv2": "dummy"})
         server = HsmServer(script, url)
         self.authenticate(server)
@@ -346,6 +348,24 @@ class LedgerClient(object):
         if self._target_id is None:
             self.get_version_info()
         return self._target_id
+
+    def list_apps_remote(self, url=LEDGER_HSM_URL):
+        script = HsmScript("listApps", {"persoKey": "perso_11", "scpv2": "dummy"})
+        server = HsmServer(script, url)
+        self.authenticate(server)
+
+        application_data = server.query(params={"scpv2": "dummy"})
+        while True:
+            if len(application_data) == 0:
+                break
+            client_data = self.raw_exchange(application_data)
+            application_data = server.query(client_data[:-2], params={"scpv2": "dummy"})
+        application_data = server.query(params={"scpv2": "dummy"})
+
+        apps = AppList()
+        apps.ParseFromString(application_data)
+        for app in apps.list:
+            yield AppInfo(app.name, app.flags & 0xffff, app.hashCodeData, app.hash)
 
     @property
     def apps(self):

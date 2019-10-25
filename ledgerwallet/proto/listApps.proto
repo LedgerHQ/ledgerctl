@@ -1,0 +1,13 @@
+syntax = "proto3";
+package listapps;
+
+message App {
+	uint32 flags = 1;
+	bytes hash = 2;
+	bytes hashCodeData = 3;
+	string name = 4;
+}
+
+message AppList {
+	repeated App list = 1;
+}

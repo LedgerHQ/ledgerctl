@@ -4,7 +4,7 @@ import configparser
 import click
 from tabulate import tabulate
 
-from ledgerwallet.client import LedgerClient, CommException
+from ledgerwallet.client import LedgerClient, CommException, LEDGER_HSM_URL
 from ledgerwallet.transport import enumerate_devices
 from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
@@ -49,8 +49,9 @@ def send(connect, input_file):
 
 @cli.command(help="Check if device is genuine.")
 @click.pass_obj
-def genuine_check(connect):
-    if connect().genuine_check():
+@click.option('--url', type=str, default=LEDGER_HSM_URL)
+def genuine_check(connect, url):
+    if connect().genuine_check(url):
         click.echo("Device is genuine.")
     else:
         click.echo("Device is NOT genuine.")
@@ -58,10 +59,11 @@ def genuine_check(connect):
 
 @cli.command('list', help="List installed applications.")
 @click.pass_obj
-def list_apps(connect):
+@click.option('--remote', default=False, is_flag=True)
+def list_apps(connect, remote):
     client = connect()
     rows = []
-    for app in client.apps:
+    for app in client.list_apps_remote() if remote else client.apps:
         rows.append([app.name, utils.flags_to_string(app.flags), app.code_data_hash.hex(), app.full_hash.hex()])
     if len(rows) == 0:
         click.echo("There is no application on the device.")
