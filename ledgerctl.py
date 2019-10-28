@@ -4,11 +4,23 @@ import configparser
 import click
 from tabulate import tabulate
 
-from ledgerwallet.client import LedgerClient, CommException, LEDGER_HSM_URL
+from ledgerwallet.client import LedgerClient, CommException, LEDGER_HSM_URL, LEDGER_HSM_KEY
 from ledgerwallet.transport import enumerate_devices
 from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
 from ledgerwallet import utils
+
+
+_remote_options = [
+    click.option('--url', type=str, default=LEDGER_HSM_URL, help="Server URL."),
+    click.option('--key', '-k', type=str, default=LEDGER_HSM_KEY, help="Key identifier on the remote server.")
+]
+
+
+def remote_options(func):
+    for option in reversed(_remote_options):
+        func = option(func)
+    return func
 
 
 @click.group()
@@ -27,7 +39,7 @@ def cli(ctx, verbose):
 
             default_config = config['DEFAULT']
             private_key = bytes.fromhex(default_config['private_key'])
-        except:
+        except KeyError:
             private_key = bytes.fromhex("5244aa214e6190220583754f80eb80e9d2b04a94c2c551e882f5c37a97077ab2")
         devices = enumerate_devices()
         return LedgerClient(devices[0], private_key=private_key)
@@ -48,22 +60,23 @@ def send(connect, input_file):
 
 
 @cli.command(help="Check if device is genuine.")
+@remote_options
 @click.pass_obj
-@click.option('--url', type=str, default=LEDGER_HSM_URL)
-def genuine_check(connect, url):
-    if connect().genuine_check(url):
+def genuine_check(connect, url, key):
+    if connect().genuine_check(url, key):
         click.echo("Device is genuine.")
     else:
         click.echo("Device is NOT genuine.")
 
 
 @cli.command('list', help="List installed applications.")
-@click.pass_obj
 @click.option('--remote', default=False, is_flag=True)
-def list_apps(connect, remote):
+@remote_options
+@click.pass_obj
+def list_apps(connect, remote, url, key):
     client = connect()
     rows = []
-    for app in client.list_apps_remote() if remote else client.apps:
+    for app in client.list_apps_remote(url, key) if remote else client.apps:
         rows.append([app.name, utils.flags_to_string(app.flags), app.code_data_hash.hex(), app.full_hash.hex()])
     if len(rows) == 0:
         click.echo("There is no application on the device.")
@@ -96,10 +109,11 @@ def install_app(connect, manifest: AppManifest, force):
 @cli.command("remote-install", help="Install an application from a remote server.")
 @click.argument("app_path")
 @click.argument("key_path")
+@remote_options
 @click.pass_obj
-def install_remote_app(connect, app_path, key_path):
+def install_remote_app(connect, app_path, key_path, url, key):
     client = connect()
-    client.install_remote_app(app_path, key_path)
+    client.install_remote_app(app_path, key_path, url, key)
 
 
 @cli.command("delete", help="Delete application.")
@@ -231,12 +245,11 @@ def info(connect):
 @cli.command("upgrade-firmware", help="Upgrade firmware.")
 @click.argument("firmware_name")
 @click.argument("firmware_key")
-@click.argument("perso_key")
-@click.argument("url", required=False)
+@remote_options
 @click.pass_obj
-def upgrade_firmware(connect, firmware_name, firmware_key, perso_key, url):
+def upgrade_firmware(connect, firmware_name, firmware_key, url, key):
     client = connect()
-    client.upgrade_firmware(firmware_name, firmware_key, perso_key, url)
+    client.upgrade_firmware(firmware_name, firmware_key, url, key)
 
 
 if __name__ == '__main__':

@@ -58,6 +58,7 @@ SCP_MAC_LENGTH = 0xE
 
 
 LEDGER_HSM_URL = "https://hsmprod.hardwarewallet.com/hsm/process"
+LEDGER_HSM_KEY = "perso_11"
 
 
 ApduListAppsResponse = Struct(
@@ -252,8 +253,8 @@ class LedgerClient(object):
         else:
             raise TypeError("app parameter must be string or digest")
 
-    def install_remote_app(self, app_path, key_path, url=LEDGER_HSM_URL):
-        script = HsmScript("distributeFirmware11", {"persoKey": "perso_11", "scpv2": "dummy"})
+    def install_remote_app(self, app_path, key_path, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY):
+        script = HsmScript("distributeFirmware11", {"persoKey": key, "scpv2": "dummy"})
         server = HsmServer(script, url)
         self.authenticate(server)
 
@@ -264,8 +265,8 @@ class LedgerClient(object):
             self.raw_exchange(application_data[offset:offset + 5 + apdu_len])
             offset += 5 + apdu_len
 
-    def upgrade_firmware(self, firmware_name, firmware_key, perso_key, url=LEDGER_HSM_URL):
-        script = HsmScript("distributeFirmware11_scan", {"persoKey": perso_key, "scpv2": "dummy"})
+    def upgrade_firmware(self, firmware_name, firmware_key, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY):
+        script = HsmScript("distributeFirmware11_scan", {"persoKey": key, "scpv2": "dummy"})
         server = HsmServer(script, url)
         self.authenticate(server)
 
@@ -283,24 +284,23 @@ class LedgerClient(object):
             self.raw_exchange(application_data[offset:offset + 5 + apdu_len])
             offset += 5 + apdu_len
 
-    def genuine_check(self, url=None):
-        script = HsmScript("checkGenuine", {"persoKey": "perso_11", "scpv2": "dummy"})
+    def genuine_check(self, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY):
+        script = HsmScript("checkGenuine", {"persoKey": key, "scpv2": "dummy"})
         server = HsmServer(script, url)
         self.authenticate(server)
 
         client_data = b""
         while True:
-            application_data = server.query(client_data)
+            application_data = server.query(client_data[:-2])  # No not send status word
             if len(application_data) < 5:
                 break
             client_data = self.raw_exchange(application_data)
-
         # custom_ui = client_data[0]
         # custom_ca = client_data[1]
         return True
 
-    def endorse(self, key_id: int, url=LEDGER_HSM_URL):
-        script = HsmScript("signEndorsement", {"persoKey": "perso_11"})
+    def endorse(self, key_id: int, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY):
+        script = HsmScript("signEndorsement", {"persoKey": key})
         server = HsmServer(script, url)
         self.authenticate(server)
         server.query()  # Commit agreement
@@ -349,8 +349,8 @@ class LedgerClient(object):
             self.get_version_info()
         return self._target_id
 
-    def list_apps_remote(self, url=LEDGER_HSM_URL):
-        script = HsmScript("listApps", {"persoKey": "perso_11", "scpv2": "dummy"})
+    def list_apps_remote(self, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY):
+        script = HsmScript("listApps", {"persoKey": key, "scpv2": "dummy"})
         server = HsmServer(script, url)
         self.authenticate(server)
 
