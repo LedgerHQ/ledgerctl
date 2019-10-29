@@ -1,5 +1,6 @@
 import os
 import configparser
+import sys
 
 import click
 from tabulate import tabulate
@@ -42,6 +43,9 @@ def cli(ctx, verbose):
         except KeyError:
             private_key = bytes.fromhex("5244aa214e6190220583754f80eb80e9d2b04a94c2c551e882f5c37a97077ab2")
         devices = enumerate_devices()
+        if len(devices) == 0:
+            click.echo("No Ledger device has been found.")
+            sys.exit(0)
         return LedgerClient(devices[0], private_key=private_key)
     ctx.obj = get_client
 

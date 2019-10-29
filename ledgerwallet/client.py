@@ -380,4 +380,4 @@ class LedgerClient(object):
             data = self.apdu_secure_exchange(LedgerSecureIns.LIST_APPS_CONTINUE)
 
     def run_app(self, app_name: str):
-        return self.apdu_exchange(LedgerSecureIns.INS_RUN_APP, app_name.encode())
+        return self.apdu_exchange(LedgerIns.RUN_APP, app_name.encode())
