@@ -2,7 +2,7 @@ import requests
 
 from ledgerwallet.hsmscript import HsmScript
 from ledgerwallet.ledgerserver import LedgerServer
-from ledgerwallet.LedgerHSMServer_pb2 import Request, Response
+from ledgerwallet.proto.LedgerHSMServer_pb2 import Request, Response
 from ledgerwallet.utils import serialize
 
 
