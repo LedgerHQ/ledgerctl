@@ -16,6 +16,7 @@ class HsmServer(LedgerServer):
 
         self.public_key = None
         self.last_request_id = None
+        self.session = requests.Session()
 
     @staticmethod
     def _query_add_param(request: Request, alias: str, name: str, local: bool = False):
@@ -39,7 +40,7 @@ class HsmServer(LedgerServer):
         if data is not None:
             request.parameters = data
 
-        req = requests.post(self.url, request.SerializeToString())
+        req = self.session.post(self.url, request.SerializeToString())
         response = Response()
         # TODO: handle errors
         response.ParseFromString(req.content)
