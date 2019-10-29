@@ -134,6 +134,16 @@ def delete_app(connect, app, by_hash):
             raise
 
 
+@cli.command("remote-delete", help="Delete an application using a remote server.")
+@click.argument("app_path")
+@click.argument("key_path")
+@remote_options
+@click.pass_obj
+def delete_app_remote(connect, app_path, key_path, url, key):
+    client = connect()
+    client.delete_remote_app(app_path, key_path, url, key)
+
+
 @cli.command(help="Run specified application.")
 @click.argument("app_name")
 @click.pass_obj

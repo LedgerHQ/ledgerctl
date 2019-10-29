@@ -265,6 +265,9 @@ class LedgerClient(object):
             self.raw_exchange(application_data[offset:offset + 5 + apdu_len])
             offset += 5 + apdu_len
 
+    def delete_remote_app(self, app_path, key_path, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY):
+        return self.install_remote_app(app_path, key_path, url, key)
+
     def upgrade_firmware(self, firmware_name, firmware_key, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY):
         script = HsmScript("distributeFirmware11_scan", {"persoKey": key, "scpv2": "dummy"})
         server = HsmServer(script, url)
