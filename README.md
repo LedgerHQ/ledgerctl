@@ -64,10 +64,10 @@ Manifest entries are pretty straightforward if you are familiar with the BOLOS S
 You can use an ugly one-liner to retrieve it:
 
 ```shell
-echo $(($(grep _envram_data debug/app.map | tr -s ' ' | cut -f2 -d' ')-$(grep _nvram_data debug/app.map | tr -s ' ' | cut -f2 -d' ')))
+echo $(($(grep _envram_data debug/app.map | awk '{ print $1 }') - $(grep _nvram_data debug/app.map | awk '{ print $1 }')))
 ```
 
-As an example, the standard way to install an application, using "make load" with the BOLOS SDK, launches the following command:
+As an example, the standard way to install the [Bitcoin application]( https://github.com/LedgerHQ/ledger-app-btc ) you compiled is to run `make load` with the BOLOS SDK. It launches the following command:
 
 ```shell
 python3 -m ledgerblue.loadApp --curve secp256k1 --tlv --targetId 0x31100004 --targetVersion="1.6.0" --delete --fileName bin/app.hex --appName "Bitcoin" --appVersion 1.3.13 --dataSize $((0x`cat debug/app.map |grep _envram_data | tr -s ' ' | cut -f2 -d' '|cut -f2 -d'x'` - 0x`cat debug/app.map |grep _nvram_data | tr -s ' ' | cut -f2 -d' '|cut -f2 -d'x'`)) `ICONHEX=\`python3 /home/dev/sdk/icon3.py --hexbitmaponly nanos_app_bitcoin.gif  2>/dev/null\` ; [ ! -z "$ICONHEX" ] && echo "--icon $ICONHEX"`  --path "" --appFlags 0xa50 --offline bin/app.apdu | grep "Application" | cut -f5 -d' ' > bin/app.sha256
@@ -95,7 +95,7 @@ To install it with ledgerctl:
 
 3. Install with `ledgerctl install app.json`.
 
-If you want to remove first the previous version, run the previous command with the `-f` flag.
+If you want to force the deletion of the previous version, run the previous command with the `-f` flag.
 
 ### Viewing APDUs
 

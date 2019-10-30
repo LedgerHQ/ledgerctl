@@ -1,4 +1,3 @@
-import base64
 import collections
 import colorsys
 import json
