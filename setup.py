@@ -14,6 +14,7 @@ setup(
         "hidapi",
         "intelhex",
         "protobuf>=3.6",
+        "Pillow",
         "requests",
         "tabulate",
     ],

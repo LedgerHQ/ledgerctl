@@ -1,7 +1,7 @@
 {
 	"name": "SSH/PGP Agent",
 	"version": "0.0.4",
-	"icon": "AQAAAAD///8AABj8JAIkCiQafjJmYm5ifjIAGkAKXwJfAkACQP5/AAA=",
+	"icon": "nanos_app_ssh.gif",
 	"targetId": "0x31100003",
 	"derivationPath": {
 		"curves": ["prime256r1", "ed25519"],
