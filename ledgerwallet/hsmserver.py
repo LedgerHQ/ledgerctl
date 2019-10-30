@@ -7,7 +7,9 @@ from ledgerwallet.utils import serialize
 
 
 class HsmServer(LedgerServer):
-    def __init__(self, script: HsmScript, url="https://hsmprod.hardwarewallet.com/hsm/process"):
+    def __init__(
+        self, script: HsmScript, url="https://hsmprod.hardwarewallet.com/hsm/process"
+    ):
         self.url = url
         self.script = script
 
@@ -26,7 +28,9 @@ class HsmServer(LedgerServer):
         param.local = local
 
     def query(self, data=None, params=None) -> bytes:
-        request = Request(reference=self.script.name, largeStack=self.script.use_large_stack)
+        request = Request(
+            reference=self.script.name, largeStack=self.script.use_large_stack
+        )
         if self.last_request_id is not None:
             request.id = self.last_request_id
 
@@ -56,7 +60,7 @@ class HsmServer(LedgerServer):
 
     def get_nonce(self) -> bytes:
         response = self.query()
-        self.public_key, self.server_nonce = response[:65], response[65:65 + 8]
+        self.public_key, self.server_nonce = response[:65], response[65 : 65 + 8]
 
         return self.server_nonce
 

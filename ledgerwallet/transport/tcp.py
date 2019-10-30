@@ -15,9 +15,14 @@ class TcpDevice(object):
     @classmethod
     def enumerate_devices(cls):
         if "LEDGER_PROXY_ADDRESS" in os.environ and "LEDGER_PROXY_PORT" in os.environ:
-            return [TcpDevice("{0:s}:{1:d}".format(
-                os.environ["LEDGER_PROXY_ADDRESS"],
-                int(os.environ["LEDGER_PROXY_PORT"])))]
+            return [
+                TcpDevice(
+                    "{0:s}:{1:d}".format(
+                        os.environ["LEDGER_PROXY_ADDRESS"],
+                        int(os.environ["LEDGER_PROXY_PORT"]),
+                    )
+                )
+            ]
         else:
             return []
 
@@ -26,11 +31,11 @@ class TcpDevice(object):
 
     def write(self, data: bytes):
         # data is prefixed by its size
-        data_to_send = int.to_bytes(len(data), 4, 'big') + data
+        data_to_send = int.to_bytes(len(data), 4, "big") + data
         self.socket.send(data_to_send)
 
     def read(self) -> bytes:
-        packet_len = int.from_bytes(self.socket.recv(4), 'big')
+        packet_len = int.from_bytes(self.socket.recv(4), "big")
         return self.socket.recv(packet_len + 2)
 
     def exchange(self, data: bytes):

@@ -14,7 +14,7 @@ def serialize(buffer: bytes):
 def unserialize(buffer: bytes):
     buffer_len = buffer[0]
     assert len(buffer) >= buffer_len + 1
-    return buffer[1:buffer_len + 1], buffer[buffer_len + 1:]
+    return buffer[1 : buffer_len + 1], buffer[buffer_len + 1 :]
 
 
 def get_device_name(target_id: int):
@@ -22,9 +22,9 @@ def get_device_name(target_id: int):
         0x31100002: "Ledger Nano S",  # firmware version <= 1.3.1
         0x31100003: "Ledger Nano S",  # firmware version > 1.3.1
         0x31100004: "Ledger Nano S",  # firmware version >= 1.5
-        0x31000002: "Ledger Blue",    # firmware version <= 2.0
-        0x31010004: "Ledger Blue",    # firmware version > 2.0
-        0x33000004: "Ledger Nano X"
+        0x31000002: "Ledger Blue",  # firmware version <= 2.0
+        0x31010004: "Ledger Blue",  # firmware version > 2.0
+        0x33000004: "Ledger Nano X",
     }
     return target_ids.get(target_id, "Unknown device")
 

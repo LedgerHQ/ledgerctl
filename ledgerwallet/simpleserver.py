@@ -28,14 +28,21 @@ class SimpleServer(LedgerServer):
         else:
             data_to_sign = bytes([CERT_ROLE_SIGNER]) + self.master_public
             master_signature = self.master_private.sign(data_to_sign)
-            cert_chain.append(serialize(self.master_public) + serialize(master_signature))
+            cert_chain.append(
+                serialize(self.master_public) + serialize(master_signature)
+            )
 
         # Provide the ephemeral certificate, signed with the master public key
         self.ephemeral_private = PrivateKey()
         ephemeral_public = self.ephemeral_private.pubkey.serialize(compressed=False)
         # print("Using ephemeral key {}".format(ephemeral_public.hex()))
 
-        data_to_sign = bytes([CERT_ROLE_SIGNER_EPHEMERAL]) + self.server_nonce + self.device_nonce + ephemeral_public
+        data_to_sign = (
+            bytes([CERT_ROLE_SIGNER_EPHEMERAL])
+            + self.server_nonce
+            + self.device_nonce
+            + ephemeral_public
+        )
         signature = self.master_private.sign(data_to_sign)
         cert_chain.append(serialize(ephemeral_public) + serialize(signature))
 
@@ -54,14 +61,24 @@ class SimpleServer(LedgerServer):
             # first cert contains a header field which holds the certificate's public key role
             if i == 0:
                 # device_public_key = certificate_public_key
-                certificate_signed_data = bytes([CERT_ROLE_DEVICE]) + certificate_header + certificate_public_key
+                certificate_signed_data = (
+                    bytes([CERT_ROLE_DEVICE])
+                    + certificate_header
+                    + certificate_public_key
+                )
             # Could check if the device certificate is signed by the issuer public key
             # ephemeral key certificate
             else:
-                certificate_signed_data = bytes([CERT_ROLE_DEVICE_EPHEMERAL]) \
-                                          + self.device_nonce + self.server_nonce + certificate_public_key
+                certificate_signed_data = (
+                    bytes([CERT_ROLE_DEVICE_EPHEMERAL])
+                    + self.device_nonce
+                    + self.server_nonce
+                    + certificate_public_key
+                )
 
-            if not last_dev_pub_key.verify(certificate_signed_data, certificate_signature):
+            if not last_dev_pub_key.verify(
+                certificate_signed_data, certificate_signature
+            ):
                 """
                 if index == 0:
                     # Not an error if loading from user key
