@@ -1,20 +1,30 @@
-import os
 import configparser
+import os
 import sys
 
 import click
 from tabulate import tabulate
 
-from ledgerwallet.client import LedgerClient, CommException, LEDGER_HSM_URL, LEDGER_HSM_KEY
-from ledgerwallet.transport import enumerate_devices
+from ledgerwallet import utils
+from ledgerwallet.client import (
+    LEDGER_HSM_KEY,
+    LEDGER_HSM_URL,
+    CommException,
+    LedgerClient,
+)
 from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
-from ledgerwallet import utils
-
+from ledgerwallet.transport import enumerate_devices
 
 _remote_options = [
-    click.option('--url', type=str, default=LEDGER_HSM_URL, help="Server URL."),
-    click.option('--key', '-k', type=str, default=LEDGER_HSM_KEY, help="Key identifier on the remote server.")
+    click.option("--url", type=str, default=LEDGER_HSM_URL, help="Server URL."),
+    click.option(
+        "--key",
+        "-k",
+        type=str,
+        default=LEDGER_HSM_KEY,
+        help="Key identifier on the remote server.",
+    ),
 ]
 
 
@@ -34,17 +44,17 @@ def get_private_key() -> bytes:
         config = configparser.RawConfigParser()
         config.read(cfg_file)
 
-        default_config = config['DEFAULT']
-        private_key = bytes.fromhex(default_config['private_key'])
+        default_config = config["DEFAULT"]
+        private_key = bytes.fromhex(default_config["private_key"])
     except KeyError:
         private_key = PrivateKey()
         public_key = private_key.pubkey
         pubkey_bytes = public_key.serialize(compressed=False)
 
         config = configparser.RawConfigParser()
-        config['DEFAULT'] = {
+        config["DEFAULT"] = {
             "public_key": pubkey_bytes.hex(),
-            "private_key": private_key.serialize().hex()
+            "private_key": private_key.serialize().hex(),
         }
         with click.open_file(cfg_file, "w") as f:
             config.write(f)
@@ -64,11 +74,12 @@ def cli(ctx, verbose):
             click.echo("No Ledger device has been found.")
             sys.exit(0)
         return LedgerClient(devices[0], private_key=get_private_key())
+
     ctx.obj = get_client
 
 
 @cli.command(help="Send raw data to the device.")
-@click.argument("input_file", type=click.File('r'))
+@click.argument("input_file", type=click.File("r"))
 @click.pass_obj
 def send(get_client, input_file):
     client = get_client()
@@ -90,15 +101,22 @@ def genuine_check(get_client, url, key):
         click.echo("Device is NOT genuine.")
 
 
-@cli.command('list', help="List installed applications.")
-@click.option('--remote', default=False, is_flag=True)
+@cli.command("list", help="List installed applications.")
+@click.option("--remote", default=False, is_flag=True)
 @remote_options
 @click.pass_obj
 def list_apps(get_client, remote, url, key):
     client = get_client()
     rows = []
     for app in client.list_apps_remote(url, key) if remote else client.apps:
-        rows.append([app.name, utils.flags_to_string(app.flags), app.code_data_hash.hex(), app.full_hash.hex()])
+        rows.append(
+            [
+                app.name,
+                utils.flags_to_string(app.flags),
+                app.code_data_hash.hex(),
+                app.full_hash.hex(),
+            ]
+        )
     if len(rows) == 0:
         click.echo("There is no application on the device.")
     else:
@@ -107,7 +125,12 @@ def list_apps(get_client, remote, url, key):
 
 @cli.command("install", help="Install application.")
 @click.argument("manifest")
-@click.option("-f", "--force", help="Delete using application hash instead of application name", is_flag=True)
+@click.option(
+    "-f",
+    "--force",
+    help="Delete using application hash instead of application name",
+    is_flag=True,
+)
 @click.pass_obj
 def install_app(get_client, manifest: AppManifest, force):
     client = get_client()
@@ -119,9 +142,9 @@ def install_app(get_client, manifest: AppManifest, force):
     except CommException as e:
         if e.sw == 0x6985:
             click.echo("Operation has been canceled by the user.")
-        elif e.sw == 0x6a80:
+        elif e.sw == 0x6A80:
             click.echo("An application with the same name is already installed.")
-        elif e.sw == 0x6a81:
+        elif e.sw == 0x6A81:
             click.echo("Application is already installed.")
         else:
             raise
@@ -139,7 +162,11 @@ def install_remote_app(get_client, app_path, key_path, url, key):
 
 @cli.command("delete", help="Delete application.")
 @click.argument("app")
-@click.option("--by-hash", help="Delete using application hash instead of application name", is_flag=True)
+@click.option(
+    "--by-hash",
+    help="Delete using application hash instead of application name",
+    is_flag=True,
+)
 @click.pass_obj
 def delete_app(get_client, app, by_hash):
     if by_hash:
@@ -208,37 +235,47 @@ def delete_ca(get_client):
         get_client().delete_ca()
         click.echo("Custom certificate has been deleted.")
     except CommException as e:
-        if e.sw == 0x6a84:
-            click.echo("No custom certificate is installed. There is nothing to delete.")
+        if e.sw == 0x6A84:
+            click.echo(
+                "No custom certificate is installed. There is nothing to delete."
+            )
         else:
             raise
 
 
 # Taken from https://web.archive.org/web/20111010015624/http://blogmag.net/blog/read/38/Print_human_readable_file_size
-def sizeof_fmt(num, suffix='B'):
-    for unit in ('', 'K', 'M'):
+def sizeof_fmt(num, suffix="B"):
+    for unit in ("", "K", "M"):
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
-    return "%.1f%s%s" % (num, 'G', suffix)
+    return "%.1f%s%s" % (num, "G", suffix)
 
 
 @cli.command(help="Display device memory usage.")
 @click.pass_obj
 def meminfo(get_client):
     def format_entry(name: str, size: int, max_size: int):
-        return "- {0:s}: {1:s} ({2:.2f}%)".format(name, sizeof_fmt(size), size / max_size * 100)
+        return "- {0:s}: {1:s} ({2:.2f}%)".format(
+            name, sizeof_fmt(size), size / max_size * 100
+        )
 
     memory_info = get_client().get_memory_info()
 
-    total_size = memory_info.system_size + memory_info.applications_size + memory_info.free_size
+    total_size = (
+        memory_info.system_size + memory_info.applications_size + memory_info.free_size
+    )
     click.echo("Memory usage:")
     click.echo(format_entry("System", memory_info.system_size, total_size))
     click.echo(format_entry("Applications", memory_info.applications_size, total_size))
     click.echo(format_entry("Available space", memory_info.free_size, total_size))
 
     click.echo("")
-    click.echo("Installed apps: {} (max: {})".format(memory_info.used_app_slots, memory_info.num_app_slots))
+    click.echo(
+        "Installed apps: {} (max: {})".format(
+            memory_info.used_app_slots, memory_info.num_app_slots
+        )
+    )
 
 
 @cli.command(help="Display device information.")
@@ -246,7 +283,11 @@ def meminfo(get_client):
 def info(get_client):
     version_info = get_client().get_version_info_secure()
 
-    click.echo("Device: {} ({})".format(utils.get_device_name(version_info.target_id), version_info.target_id))
+    click.echo(
+        "Device: {} ({})".format(
+            utils.get_device_name(version_info.target_id), version_info.target_id
+        )
+    )
     click.echo("SE version: {}".format(version_info.se_version))
     click.echo("MCU version: {}".format(version_info.mcu_version))
 
@@ -267,5 +308,5 @@ def upgrade_firmware(get_client, firmware_name, firmware_key, url, key):
     client.upgrade_firmware(firmware_name, firmware_key, url, key)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()
