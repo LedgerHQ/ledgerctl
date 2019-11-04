@@ -108,6 +108,10 @@ def genuine_check(get_client, url, key):
 def list_apps(get_client, remote, url, key):
     client = get_client()
     rows = []
+
+    # Always list apps using a remote server on Nano X, as custom SCP channels cannot be established
+    if client.target_id == 0x33000004:
+        remote = True
     for app in client.list_apps_remote(url, key) if remote else client.apps:
         rows.append(
             [
@@ -281,7 +285,7 @@ def meminfo(get_client):
 @cli.command(help="Display device information.")
 @click.pass_obj
 def info(get_client):
-    version_info = get_client().get_version_info_secure()
+    version_info = get_client().get_version_info()
 
     click.echo(
         "Device: {} ({})".format(

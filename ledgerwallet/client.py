@@ -184,16 +184,18 @@ class LedgerClient(object):
                 possible_cause = (
                     "Have you uninstalled the existing CA with resetCustomCA first?"
                 )
-            if status_word == 0x6985:
+            elif status_word == 0x6985:
                 possible_cause = "Condition of use not satisfied (denied by the user?)"
-            if status_word == 0x6A84 or status_word == 0x6A85:
+            elif status_word == 0x6A84 or status_word == 0x6A85:
                 possible_cause = "Not enough space?"
-            if status_word == 0x6A83:
+            elif status_word == 0x6A83:
                 possible_cause = (
                     "Maybe this app requires a library to be installed first?"
                 )
-            if status_word == 0x6484:
+            elif status_word == 0x6484:
                 possible_cause = "Are you using the correct targetId?"
+            elif status_word == 0x69D5:
+                possible_cause = "Cannot create custom secure channels on this device"
             raise CommException(
                 "Invalid status %04x (%s)" % (status_word, possible_cause),
                 status_word,
