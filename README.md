@@ -1,8 +1,12 @@
-# ledgerctl
+# ledgerwallet
 
 A Python library to control Ledger devices
 
 ## Install
+ 
+This package provides ledgerwallet, a library to interact with Ledger devices, and ledgerctl, a command line tool based on that library to easily perform operations on the devices.
+
+Supported devices are Ledger Blue, Ledger Nano S and Ledger Nano X.
 
 ### Quick install
 
@@ -10,7 +14,7 @@ ledgerctl and the ledgerwallet library can be installed using pip:
 
 ```shell
 pip3 install --upgrade protobuf setuptools
-pip3 install git+https://github.com/LedgerHQ/ledgerctl
+pip3 install ledgerwallet
 ```
 
 ### Device configuration
