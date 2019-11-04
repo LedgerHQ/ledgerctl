@@ -1,10 +1,10 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="ledgerctl",
+    name="ledgerwallet",
     python_requires=">=3.5",
     version="0.1",
-    py_modules=["ledgerctl"],
+    license="MIT",
     description="Ledger Donjon Python3 client to communicate with Ledger devices",
     install_requires=[
         "click>=7.0",
