@@ -17,6 +17,12 @@ pip3 install --upgrade protobuf setuptools
 pip3 install ledgerwallet
 ```
 
+Under a Debian or Ubuntu based system, compiling HIDAPI requires to install additional packages:
+
+```shell
+sudo apt install python3-dev libusb-1.0.0-dev libudev-dev
+```
+
 ### Device configuration
 
 You should install a custom certificate authority (CA) on the device to make the usage of ledgerctl easier. This certificate is used to establish a custom secure channel between the computer and the device, and identifies ledgerctl as a "trusted manager" on the device.

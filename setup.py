@@ -8,8 +8,9 @@ with open(path.join(this_dir, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="ledgerwallet",
+    version="0.1.2",
+    url="https://github.com/LedgerHQ/ledgerctl/",
     python_requires=">=3.5",
-    version="0.1.1",
     license="MIT",
     description="Python client and library to communicate with Ledger devices",
     long_description=long_description,
@@ -29,6 +30,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     entry_points={"console_scripts": "ledgerctl = ledgerctl:cli"},
+    py_modules=["ledgerctl"],
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.5",
