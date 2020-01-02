@@ -37,7 +37,7 @@ def remote_options(func):
 def get_private_key() -> bytes:
     app_path = click.get_app_dir("ledgerctl")
     if not os.path.exists(app_path):
-        os.mkdir(app_path)
+        os.makedirs(app_path)
 
     cfg_file = os.path.join(app_path, "config.ini")
     try:
@@ -47,17 +47,19 @@ def get_private_key() -> bytes:
         default_config = config["DEFAULT"]
         private_key = bytes.fromhex(default_config["private_key"])
     except KeyError:
-        private_key = PrivateKey()
-        public_key = private_key.pubkey
+        new_private_key = PrivateKey()
+        public_key = new_private_key.pubkey
         pubkey_bytes = public_key.serialize(compressed=False)
 
         config = configparser.RawConfigParser()
         config["DEFAULT"] = {
             "public_key": pubkey_bytes.hex(),
-            "private_key": private_key.serialize().hex(),
+            "private_key": new_private_key.serialize().hex(),
         }
         with click.open_file(cfg_file, "w") as f:
             config.write(f)
+        private_key = bytes.fromhex(new_private_key.serialize().hex())
+
     return private_key
 
 
