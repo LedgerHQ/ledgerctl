@@ -165,6 +165,9 @@ class LedgerClient(object):
             self.private_key = PrivateKey(private_key)
         device.open()
 
+    def close(self):
+        self.device.close()
+
     def raw_exchange(self, data: bytes) -> bytes:
         LOG.debug("=> " + data.hex())
         output_data = bytes(self.device.exchange(data))
