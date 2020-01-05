@@ -29,6 +29,7 @@ from ledgerwallet.ledgerserver import LedgerServer
 from ledgerwallet.manifest import AppManifest
 from ledgerwallet.proto.listApps_pb2 import AppList
 from ledgerwallet.simpleserver import SimpleServer
+from ledgerwallet.transport import enumerate_devices
 from ledgerwallet.utils import serialize
 
 
@@ -150,11 +151,20 @@ class CommException(Exception):
         return buf
 
 
+class NoLedgerDeviceException(Exception):
+    pass
+
+
 LOG = logging.getLogger("ledgerwallet")
 
 
 class LedgerClient(object):
-    def __init__(self, device, cla=0xE0, private_key=None):
+    def __init__(self, device=None, cla=0xE0, private_key=None):
+        if device is None:
+            devices = enumerate_devices()
+            if len(devices) == 0:
+                raise NoLedgerDeviceException("No Ledger device has been found.")
+            device = devices[0]
         self.device = device
         self.cla = cla
         self._target_id = None
@@ -163,7 +173,7 @@ class LedgerClient(object):
             self.private_key = PrivateKey()
         else:
             self.private_key = PrivateKey(private_key)
-        device.open()
+        self.device.open()
 
     def close(self):
         self.device.close()
