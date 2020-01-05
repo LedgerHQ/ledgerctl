@@ -12,9 +12,9 @@ from ledgerwallet.client import (
     CommException,
     LedgerClient,
 )
+from ledgerwallet.client import NoLedgerDeviceException
 from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
-from ledgerwallet.transport import enumerate_devices
 
 _remote_options = [
     click.option("--url", type=str, default=LEDGER_HSM_URL, help="Server URL."),
@@ -71,11 +71,11 @@ def cli(ctx, verbose):
         utils.enable_apdu_log()
 
     def get_client():
-        devices = enumerate_devices()
-        if len(devices) == 0:
-            click.echo("No Ledger device has been found.")
+        try:
+            return LedgerClient(private_key=get_private_key())
+        except NoLedgerDeviceException as exception:
+            click.echo(exception)
             sys.exit(0)
-        return LedgerClient(devices[0], private_key=get_private_key())
 
     ctx.obj = get_client
 
