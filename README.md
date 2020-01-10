@@ -13,7 +13,7 @@ Supported devices are Ledger Blue, Ledger Nano S and Ledger Nano X.
 ledgerctl and the ledgerwallet library can be installed using pip:
 
 ```shell
-pip3 install --upgrade protobuf setuptools
+pip3 install --upgrade protobuf setuptools ecdsa
 pip3 install ledgerwallet
 ```
 
