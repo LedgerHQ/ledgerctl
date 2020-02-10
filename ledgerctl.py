@@ -89,7 +89,7 @@ def send(get_client, input_file):
         chunk = input_file.readline()
         if not chunk:
             break
-        response = client.raw_exchange(bytes.fromhex(chunk))
+        response = client.raw_exchange(bytes.fromhex(chunk.rstrip()))
         click.echo(response.hex())
 
 
