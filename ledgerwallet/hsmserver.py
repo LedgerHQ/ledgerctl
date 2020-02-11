@@ -40,6 +40,8 @@ class HsmServer(LedgerServer):
         elif self.script.default_params:
             for alias, name in self.script.default_params.items():
                 self._query_add_param(request, alias, name)
+            if self.script.scpv2:
+                self._query_add_param(request, "scpv2", "dummy")
 
         if data is not None:
             request.parameters = data
