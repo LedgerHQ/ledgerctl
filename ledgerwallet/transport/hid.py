@@ -1,4 +1,8 @@
-import hid
+import os
+if os.getenv("LEDGERWALLET_HIDRAW", "").lower() in ["1", "true"]:
+    import hidraw as hid
+else:
+    import hid
 
 LEDGER_VENDOR_ID = 0x2C97
 
