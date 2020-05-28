@@ -175,8 +175,8 @@ class LedgerClient(object):
             LOG.debug("<= " + output_data.hex())
         return output_data
 
-    def apdu_exchange(self, ins, data=b"", sw1=0, sw2=0):
-        apdu = bytes([self.cla, ins, sw1, sw2])
+    def apdu_exchange(self, ins, data=b"", p1=0, p2=0):
+        apdu = bytes([self.cla, ins, p1, p2])
         apdu += serialize(data)
         response = self.raw_exchange(apdu)
 
@@ -207,14 +207,14 @@ class LedgerClient(object):
 
         return response[:-2]
 
-    def apdu_secure_exchange(self, ins, data=b"", sw1=0, sw2=0):
+    def apdu_secure_exchange(self, ins, data=b"", p1=0, p2=0):
         if self.scp is None:
             server = SimpleServer(self.private_key)
             secret = self.authenticate(server)
             self.scp = SCP(secret)
 
         data = self.apdu_exchange(
-            LedgerIns.SECUINS, self.scp.wrap(bytes([ins]) + data), sw1, sw2
+            LedgerIns.SECUINS, self.scp.wrap(bytes([ins]) + data), p1, p2
         )
         return self.scp.unwrap(data)
 
@@ -234,7 +234,7 @@ class LedgerClient(object):
         for i in range(len(server_chain)):
             if i == len(server_chain) - 1:
                 self.apdu_exchange(
-                    LedgerIns.VALIDATE_CERTIFICATE, server_chain[i], sw1=0x80
+                    LedgerIns.VALIDATE_CERTIFICATE, server_chain[i], p1=0x80
                 )
             else:
                 self.apdu_exchange(LedgerIns.VALIDATE_CERTIFICATE, server_chain[i])
@@ -245,7 +245,7 @@ class LedgerClient(object):
             if i == 0:
                 certificate = self.apdu_exchange(LedgerIns.GET_CERTIFICATE)
             else:
-                certificate = self.apdu_exchange(LedgerIns.GET_CERTIFICATE, sw1=0x80)
+                certificate = self.apdu_exchange(LedgerIns.GET_CERTIFICATE, p1=0x80)
             if len(certificate) == 0:
                 break
             client_chain.append(certificate)
@@ -379,7 +379,7 @@ class LedgerClient(object):
         self.authenticate(server)
         server.query()  # Commit agreement
 
-        data = self.apdu_exchange(LedgerIns.ENDORSE_SET_START, sw1=key_id)
+        data = self.apdu_exchange(LedgerIns.ENDORSE_SET_START, p1=key_id)
         certificate = server.query(data, params={"endorsementKey": "attest_1"})
 
         # Commit endorsement certificate
