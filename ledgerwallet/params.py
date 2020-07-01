@@ -37,7 +37,7 @@ class Asn1Length(Construct):
         if byte & 0x80 == 0:
             return byte
 
-        num_bytes = byte & 0x80
+        num_bytes = byte & ~0x80
         encoded_len = stream_read(stream, num_bytes)
         num = 0
         for len_byte in iterateints(encoded_len):
