@@ -59,8 +59,8 @@ class PrivateKey(object):
         # ECDH as computed by libsecpk256k1
         point = self.sk.privkey.secret_multiplier * public_key.vk.pubkey.point
         if point.y() & 1 == 1:
-            msg = b"\x03" + point.x().to_bytes(32, "big")
+            msg = b"\x03" + ecdsa.util.number_to_string(point.x(), point.order())
         else:
-            msg = b"\x02" + point.x().to_bytes(32, "big")
+            msg = b"\x02" + ecdsa.util.number_to_string(point.x(), point.order())
         md = hashlib.sha256(msg)
         return md.digest()
