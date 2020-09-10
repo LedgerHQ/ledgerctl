@@ -1,6 +1,7 @@
 import configparser
 import os
 import sys
+import re
 
 import click
 from tabulate import tabulate
@@ -312,6 +313,40 @@ def info(get_client):
 def upgrade_firmware(get_client, firmware_name, firmware_key, url, key):
     client = get_client()
     client.upgrade_firmware(firmware_name, firmware_key, url, key)
+
+
+@cli.command(help="Perform quick onboarding from command line. Device must be reset and booted in recovery mode.")
+@click.argument("pin")
+@click.argument("words")
+@click.option("--id", help="Identity number to initialize", default=0, type=click.IntRange(0, 2))
+@click.option("--prefix", help="Derivation prefix")
+@click.option("--passphrase", help="Derivation passphrase")
+@click.pass_obj
+def onboard(connect, pin, passphrase, words, id, prefix):
+    # Check pin argument
+    if not re.match("^[0-9]{4,8}$", pin):
+        raise ValueError("Invalid PIN format")
+
+    def pack(buf, string):
+        if string:
+            as_bytes = string.encode()
+            buf.append(len(as_bytes))
+            buf += as_bytes
+        else:
+            buf.append(0)
+
+    data = bytearray()
+    pack(data, pin)
+    pack(data, prefix)
+    pack(data, passphrase)
+    pack(data, words)
+
+    apdu = bytearray([0xe0, 0xd0, id, 0x00, len(data)]) + data
+    client = connect()
+    response = client.raw_exchange(apdu)
+
+    if response != b'\x90\x00':
+        raise Exception(f"Onboarding failed")
 
 
 if __name__ == "__main__":
