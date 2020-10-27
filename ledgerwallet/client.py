@@ -1,5 +1,6 @@
 import enum
 import logging
+import os
 import struct
 from typing import Union
 
@@ -20,6 +21,7 @@ from construct import (
     this,
 )
 from intelhex import IntelHex
+from ledgercomm import Transport
 
 from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.crypto.scp import SCP
@@ -29,7 +31,6 @@ from ledgerwallet.ledgerserver import LedgerServer
 from ledgerwallet.manifest import AppManifest
 from ledgerwallet.proto.listApps_pb2 import AppList
 from ledgerwallet.simpleserver import SimpleServer
-from ledgerwallet.transport import enumerate_devices
 from ledgerwallet.utils import serialize
 
 
@@ -161,10 +162,13 @@ LOG = logging.getLogger("ledgerwallet")
 class LedgerClient(object):
     def __init__(self, device=None, cla=0xE0, private_key=None):
         if device is None:
-            devices = enumerate_devices()
-            if len(devices) == 0:
-                raise NoLedgerDeviceException("No Ledger device has been found.")
-            device = devices[0]
+            if "LEDGER_PROXY_ADDRESS" in os.environ and "LEDGER_PROXY_PORT" in os.environ:
+                device = Transport(interface="tcp",
+                                   server=os.environ["LEDGER_PROXY_ADDRESS"],
+                                   port=int(os.environ["LEDGER_PROXY_PORT"]))
+
+            else:
+                device = Transport(interface="hid")
         self.device = device
         self.cla = cla
         self._target_id = None
@@ -173,17 +177,15 @@ class LedgerClient(object):
             self.private_key = PrivateKey()
         else:
             self.private_key = PrivateKey(private_key)
-        self.device.open()
 
     def close(self):
         self.device.close()
 
     def raw_exchange(self, data: bytes) -> bytes:
-        LOG.debug("=> " + data.hex())
-        output_data = bytes(self.device.exchange(data))
-        if len(output_data) > 0:
-            LOG.debug("<= " + output_data.hex())
-        return output_data
+        LOG.debug("=> %s", data.hex())
+        status_word, response = self.device.exchange_raw(data)
+        LOG.debug("<= %s%s", response.hex(), hex(status_word)[2:])
+        return response + int.to_bytes(status_word, 2, byteorder="big")
 
     def apdu_exchange(self, ins, data=b"", p1=0, p2=0):
         apdu = bytes([self.cla, ins, p1, p2])

@@ -20,12 +20,12 @@ setup(
         "construct>=2.10",
         "cryptography>=2.5",
         "ecdsa",
-        "hidapi",
         "intelhex",
         "Pillow",
         "protobuf>=3.6",
         "requests",
         "tabulate",
+        "ledgercomm[hid]>=1.1.0"
     ],
     packages=find_packages(),
     include_package_data=True,
