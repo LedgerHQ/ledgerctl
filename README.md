@@ -20,7 +20,7 @@ pip3 install ledgerwallet
 Under a Debian or Ubuntu based system, compiling HIDAPI requires to install additional packages:
 
 ```shell
-sudo apt install python3-dev libusb-1.0.0-dev libudev-dev
+sudo apt install python3-dev libusb-1.0-0-dev libudev-dev
 ```
 
 ### Device configuration
