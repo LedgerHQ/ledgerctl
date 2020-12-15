@@ -53,14 +53,14 @@ class Asn1Length(Construct):
             )
         num = obj
         if num < 0x80:
-            stream_write(stream, int2byte(num), 1)
+            stream_write(stream, int2byte(num), 1, path)
         else:
             acc = b""
             while num != 0:
                 acc += int2byte(num & 0xFF)
                 num >>= 8
-            stream_write(stream, int2byte(0x80 | len(acc)), 1)
-            stream_write(stream, swapbytes(acc))
+            stream_write(stream, int2byte(0x80 | len(acc)), 1, path)
+            stream_write(stream, swapbytes(acc), len(acc), path)
         return obj
 
     def _emitprimitivetype(self, ksy, bitwise):
