@@ -33,12 +33,12 @@ from construct.lib import int2byte, integertypes
 @singleton
 class Asn1Length(Construct):
     def _parse(self, stream, context, path):
-        byte = byte2int(stream_read(stream, 1))
+        byte = byte2int(stream_read(stream, 1, path))
         if byte & 0x80 == 0:
             return byte
 
         num_bytes = byte & ~0x80
-        encoded_len = stream_read(stream, num_bytes)
+        encoded_len = stream_read(stream, num_bytes, path)
         num = 0
         for len_byte in iterateints(encoded_len):
             num = num << 8 + len_byte
@@ -53,14 +53,14 @@ class Asn1Length(Construct):
             )
         num = obj
         if num < 0x80:
-            stream_write(stream, int2byte(num), 1)
+            stream_write(stream, int2byte(num), 1, path)
         else:
             acc = b""
             while num != 0:
                 acc += int2byte(num & 0xFF)
                 num >>= 8
-            stream_write(stream, int2byte(0x80 | len(acc)), 1)
-            stream_write(stream, swapbytes(acc))
+            stream_write(stream, int2byte(0x80 | len(acc)), 1, path)
+            stream_write(stream, swapbytes(acc), len(acc), path)
         return obj
 
     def _emitprimitivetype(self, ksy, bitwise):

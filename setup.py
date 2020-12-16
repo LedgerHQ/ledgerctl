@@ -17,7 +17,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "click>=7.0",
-        "construct>=2.9",
+        "construct>=2.10",
         "cryptography>=2.5",
         "ecdsa",
         "hidapi",
