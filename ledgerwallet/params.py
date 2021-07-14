@@ -19,7 +19,6 @@ from construct import (
 )
 from construct.core import (
     byte2int,
-    iterateints,
     singleton,
     stream_read,
     stream_write,
@@ -40,7 +39,7 @@ class Asn1Length(Construct):
         num_bytes = byte & ~0x80
         encoded_len = stream_read(stream, num_bytes, path)
         num = 0
-        for len_byte in iterateints(encoded_len):
+        for len_byte in encoded_len:
             num = num << 8 + len_byte
         return num
 
