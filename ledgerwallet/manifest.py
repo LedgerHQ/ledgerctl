@@ -145,7 +145,7 @@ class AppManifest(object):
                         curves = 0
                         for curve in value["curves"]:
                             if curve == "secp256k1":
-                                curves |= params.CURVE_SEPCK256K1
+                                curves |= params.CURVE_SECP256K1
                             elif curve == "prime256r1":
                                 curves |= params.CURVE_PRIME256R1
                             elif curve == "ed25519":
