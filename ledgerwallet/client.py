@@ -231,7 +231,7 @@ class LedgerClient(object):
     def authenticate(self, server: LedgerServer):
         self.reset()
         if self.target_id & 0xF < 2:
-            raise BaseException("Target ID does not support SCP V2")
+            raise Exception("Target ID does not support SCP V2")
 
         # Exchange nonce
         server_nonce = server.get_nonce()

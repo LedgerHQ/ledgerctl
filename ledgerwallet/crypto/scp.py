@@ -109,6 +109,6 @@ class SCP(object):
 
         encrypted_data, mac = data[: -self.SCP_MAC_LENGTH], data[-self.SCP_MAC_LENGTH :]
         if not self._verify_cbc_mac(encrypted_data, mac):
-            raise BaseException("Invalid SCP MAC")
+            raise Exception("Invalid SCP MAC")
         data = self._decrypt_data(encrypted_data)
         return iso9797_unpad(data)
