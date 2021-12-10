@@ -69,6 +69,9 @@ LOAD_SEGMENT_CHUNK_HEADER_LENGTH = 3
 MIN_PADDING_LENGTH = 1
 SCP_MAC_LENGTH = 0xE
 
+MAX_CHUNK_SIZE = (
+    0x10000  # Maximum size of a chunk that can be loaded at once during app install
+)
 
 LEDGER_HSM_URL = "https://hsmprod.hardwarewallet.com/hsm/process"
 LEDGER_HSM_KEY = "perso_11"
@@ -265,26 +268,36 @@ class LedgerClient(object):
         self.apdu_exchange(LedgerIns.MUTUAL_AUTHENTICATE)
         return server.get_shared_secret()
 
-    def _load_segment(self, hex_file: IntelHex, segment):
+    def _load_chunk(self, hex_file: IntelHex, segment, offset: int):
         start_addr, end_addr = segment
         segment_load_address = start_addr - hex_file.minaddr()
+
         self.apdu_secure_exchange(
-            LedgerSecureIns.SET_LOAD_OFFSET, struct.pack(">I", segment_load_address)
+            LedgerSecureIns.SET_LOAD_OFFSET,
+            struct.pack(">I", segment_load_address + offset),
         )
 
-        load_size = end_addr - start_addr
+        load_size = min(end_addr - start_addr - offset, MAX_CHUNK_SIZE)
         # max_load_size = 0xf0 - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH - SCP_MAC_LENGTH
         max_load_size = 0x80
 
-        load_address = start_addr
+        load_address = start_addr + offset
+        chunk_offset = start_addr
         while load_size > 0:
             chunk_size = min(load_size, max_load_size)
             data = hex_file.gets(load_address, chunk_size)
-            data = struct.pack(">H", load_address - start_addr) + data
+            data = struct.pack(">H", chunk_offset - start_addr) + data
 
             self.apdu_secure_exchange(LedgerSecureIns.LOAD, data)
             load_address += chunk_size
+            chunk_offset += chunk_size
             load_size -= chunk_size
+
+    def _load_segment(self, hex_file: IntelHex, segment):
+        start_addr, end_addr = segment
+        # Load each segment by chunks of 64kB
+        for offset in range(0, end_addr - start_addr, MAX_CHUNK_SIZE):
+            self._load_chunk(hex_file, segment, offset)
 
     def install_app(self, app_manifest: AppManifest):
         hex_file = IntelHex(app_manifest.get_binary())
@@ -305,7 +318,6 @@ class LedgerClient(object):
         self.apdu_secure_exchange(LedgerSecureIns.CREATE_APP, data)
 
         hex_file.puts(hex_file.maxaddr() + 1, params)
-
         for segment in hex_file.segments():
             self._load_segment(hex_file, segment)
         self.apdu_secure_exchange(LedgerSecureIns.COMMIT)
