@@ -6,7 +6,7 @@ A Python library to control Ledger devices
  
 This package provides ledgerwallet, a library to interact with Ledger devices, and ledgerctl, a command line tool based on that library to easily perform operations on the devices.
 
-Supported devices are Ledger Blue, Ledger Nano S and Ledger Nano X.
+Supported devices are Ledger Blue, Ledger Nano S, Ledger Nano X and Ledger Nano S Plus.
 
 ### Quick install
 
