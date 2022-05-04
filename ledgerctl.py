@@ -64,15 +64,21 @@ def get_private_key() -> bytes:
 
 
 @click.group()
+@click.option("-p", "--port", help="Use localhost:port to communicate with a device")
 @click.option("-v", "--verbose", is_flag=True, help="Display exchanged APDU.")
 @click.pass_context
-def cli(ctx, verbose):
+def cli(ctx, port, verbose):
     if verbose:
         utils.enable_apdu_log()
 
     def get_client():
         try:
-            return LedgerClient(private_key=get_private_key())
+            if port:
+                from ledgerwallet.transport.tcp import TcpDevice
+                return LedgerClient(private_key=get_private_key(),
+                device=TcpDevice(f"127.0.0.1:{int(port)}"))
+            else:
+                return LedgerClient(private_key=get_private_key())
         except NoLedgerDeviceException as exception:
             click.echo(exception)
             sys.exit(0)
