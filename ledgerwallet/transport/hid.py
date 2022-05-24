@@ -22,6 +22,9 @@ class HidDevice(Device):
                 devices.append(HidDevice(hid_device_path))
         return devices
 
+    def __str__(self):
+        return "[HID Device] {}".format(self.path.decode())
+
     def get_name(self):
         return "hid:{}".format(self.path.decode())
 

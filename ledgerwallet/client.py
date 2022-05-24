@@ -170,6 +170,7 @@ class LedgerClient(object):
                 raise NoLedgerDeviceException("No Ledger device has been found.")
             device = devices[0]
         self.device = device
+        LOG.debug(self.device)
         self.cla = cla
         self._target_id = None
         self.scp = None

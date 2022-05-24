@@ -28,6 +28,9 @@ class TcpDevice(Device):
         else:
             return []
 
+    def __str__(self):
+        return "[TCP Device] {}:{}".format(self.server, self.port)
+
     def open(self):
         self.socket.connect((self.server, self.port))
 
