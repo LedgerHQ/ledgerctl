@@ -180,6 +180,9 @@ class LedgerClient(object):
             self.private_key = PrivateKey(private_key)
         self.device.open()
 
+    def __del__(self):
+        self.close()
+
     def close(self):
         self.device.close()
 
