@@ -1,8 +1,10 @@
 import os
 import socket
 
+from .device import Device
 
-class TcpDevice(object):
+
+class TcpDevice(Device):
     LEDGER_PROXY_ADDRESS = "127.0.0.1"
     LEDGER_PROXY_PORT = 1237
 

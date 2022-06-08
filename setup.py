@@ -1,6 +1,21 @@
+import codecs
 from setuptools import find_packages, setup
-
 from os import path
+
+
+def read(rel_path):
+    here = path.abspath(path.dirname(__file__))
+    with codecs.open(path.join(here, rel_path), 'r') as fp:
+        return fp.read()
+
+def get_version(rel_path):
+    for line in read(rel_path).splitlines():
+        if line.startswith('__version__'):
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    else:
+        raise RuntimeError("Unable to find version string.")
+
 
 this_dir = path.abspath(path.dirname(__file__))
 with open(path.join(this_dir, "README.md"), encoding="utf-8") as f:
@@ -8,7 +23,7 @@ with open(path.join(this_dir, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="ledgerwallet",
-    version="0.1.3",
+    version=get_version("ledgerwallet/__init__.py"),
     url="https://github.com/LedgerHQ/ledgerctl/",
     python_requires=">=3.6",
     license="MIT",
