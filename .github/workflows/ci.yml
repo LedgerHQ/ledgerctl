@@ -1,0 +1,29 @@
+name: Build and test LedgerWallet
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - develop
+      - master
+
+jobs:
+  build_install_test:
+    name: Build, install and test LedgerWallet
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone
+      uses: actions/checkout@v2
+    - name: Install (with dependencies)
+      run: pip install .
+    - name: Install test dependencies
+      run: pip install nose coverage
+    - name: Running unit tests
+      run: nosetests --with-coverage --cover-package ledgerwallet --cover-xml tests/unit/
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        name: codecov-ledgerwallet
