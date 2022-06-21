@@ -40,7 +40,7 @@ class Asn1Length(Construct):
         encoded_len = stream_read(stream, num_bytes, path)
         num = 0
         for len_byte in encoded_len:
-            num = num << 8 + len_byte
+            num = (num << 8) + len_byte
         return num
 
     def _build(self, obj, stream, context, path):

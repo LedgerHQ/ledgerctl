@@ -13,7 +13,7 @@ class PublicKey(object):
 
         self.vk = VerifyingKey.from_string(pubkey[1:], SECP256k1, validate_point=True)
 
-    def serialize(self, compressed=True):
+    def serialize(self, compressed: bool = True) -> bytes:
         if compressed:
             raise NotImplementedError
         return b"\x04" + self.vk.to_string()
@@ -31,20 +31,20 @@ class PublicKey(object):
 
 
 class PrivateKey(object):
-    def __init__(self, sk=None):
+    def __init__(self, sk: bytes = None):
         if sk is None:
             self.sk = SigningKey.generate(SECP256k1)
         else:
             self.sk = SigningKey.from_string(sk, SECP256k1)
 
     @property
-    def pubkey(self):
+    def pubkey(self) -> PublicKey:
         return PublicKey(b"\x04" + self.sk.get_verifying_key().to_string())
 
-    def serialize(self):
+    def serialize(self) -> bytes:
         return self.sk.to_string()
 
-    def sign(self, msg, raw=False, hashfunc=hashlib.sha256):
+    def sign(self, msg, raw=False, hashfunc=hashlib.sha256) -> bytes:
         if not raw:
             signature = self.sk.sign(
                 msg, hashfunc=hashfunc, sigencode=ecdsa.util.sigencode_der_canonize

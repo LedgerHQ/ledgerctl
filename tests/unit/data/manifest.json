@@ -1,0 +1,13 @@
+{
+    "targetId": "1234",
+    "binary": "some binary",
+    "name": "some name",
+    "flags": "9999",
+    "dataSize": 42,
+    "version": "2.9.4-debug",
+    "icon": "pied.jpeg",
+    "derivationPath": {
+        "curves": ["secp256k1", "ed25519"],
+        "paths": ["44'/0'/255", "44'/0'/0'/1/400"]
+    }
+}

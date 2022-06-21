@@ -105,11 +105,11 @@ class AppManifest(object):
             assert "targetId" in self.json and "binary" in self.json
 
     @property
-    def app_name(self):
+    def app_name(self) -> str:
         return self.json["name"]
 
     @property
-    def data_size(self):
+    def data_size(self) -> int:
         if "dataSize" not in self.json:
             return 0
         else:
