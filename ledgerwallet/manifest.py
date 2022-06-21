@@ -3,7 +3,7 @@ import colorsys
 import json
 import math
 import os
-from typing import Dict
+from typing import Dict, List, Optional
 
 from PIL import Image
 
@@ -63,7 +63,7 @@ def icon_from_file(image_file: str) -> bytes:
 
     # Reorder color map by luminance
     palette = im.getpalette()
-    opalette = {}
+    opalette: Dict[float, List] = {}
     for i in range(num_colors):
         red, green, blue = palette[3 * i : 3 * i + 3]
         hue, saturation, value = colorsys.rgb_to_hsv(
@@ -139,7 +139,10 @@ class AppManifest(object):
                     {"type_": "BOLOS_TAG_ICON", "value": icon_from_file(value)}
                 )
             elif entry == "derivationPath":
-                derivation_paths = {"paths": None, "curve": None}
+                derivation_paths: Dict[str, Optional[int]] = {
+                    "paths": None,
+                    "curve": None
+                }
                 for derivation_entry in value:
                     if derivation_entry == "curves":
                         curves = 0

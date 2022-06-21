@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from ledgerwallet.crypto.ecc import PrivateKey, PublicKey
 from ledgerwallet.ledgerserver import LedgerServer
@@ -12,12 +13,12 @@ CERT_ROLE_DEVICE_EPHEMERAL = 0x12
 
 class SimpleServer(LedgerServer):
     def __init__(self, master_private: PrivateKey, cert_chain=None):
-        self.device_nonce = None
-        self.server_nonce = None
+        self.device_nonce: Optional[bytes] = None
+        self.server_nonce: Optional[bytes] = None
         self.master_private = master_private
         self.master_public = master_private.pubkey.serialize(False)
-        self.shared_secret = None
-        self.ephemeral_private = None
+        self.shared_secret: Optional[bytes] = None
+        self.ephemeral_private: Optional[bytes] = None
 
         self.cert_chain = cert_chain
 
