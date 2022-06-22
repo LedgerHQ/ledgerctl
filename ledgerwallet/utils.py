@@ -1,4 +1,12 @@
+from enum import Enum
 import logging
+
+
+class DeviceNames(Enum):
+    LEDGER_NANO_S = "Ledger Nano S"
+    LEDGER_NANO_X = "Ledger Nano X"
+    LEDGER_NANO_SP = "Ledger Nano S+"
+    LEDGER_BLUE = "Ledger Blue"
 
 
 def enable_apdu_log():
@@ -17,14 +25,15 @@ def unserialize(buffer: bytes):
     return buffer[1 : buffer_len + 1], buffer[buffer_len + 1 :]
 
 
-def get_device_name(target_id: int):
+def get_device_name(target_id: int) -> str:
     target_ids = {
-        0x31100002: "Ledger Nano S",  # firmware version <= 1.3.1
-        0x31100003: "Ledger Nano S",  # firmware version > 1.3.1
-        0x31100004: "Ledger Nano S",  # firmware version >= 1.5
-        0x31000002: "Ledger Blue",  # firmware version <= 2.0
-        0x31010004: "Ledger Blue",  # firmware version > 2.0
-        0x33000004: "Ledger Nano X",
+        0x31100002: DeviceNames.LEDGER_NANO_S.value,  # firmware version <= 1.3.1
+        0x31100003: DeviceNames.LEDGER_NANO_S.value,  # firmware version > 1.3.1
+        0x31100004: DeviceNames.LEDGER_NANO_S.value,  # firmware version >= 1.5
+        0x31000002: DeviceNames.LEDGER_BLUE.value,  # firmware version <= 2.0
+        0x31010004: DeviceNames.LEDGER_BLUE.value,  # firmware version > 2.0
+        0x33000004: DeviceNames.LEDGER_NANO_X.value,
+        0x33100004: DeviceNames.LEDGER_NANO_SP.value,
     }
     return target_ids.get(target_id, "Unknown device")
 
