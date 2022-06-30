@@ -40,7 +40,7 @@ class Bip32PathTest(TestCase):
             self.assertEquals(Bip32Path.parse(v), k)
 
     def test_parse_empty(self):
-        # not in sample as not the parse/build behavior is not symetrical
+        # not in sample as not the parse/build behavior is not symmetrical
         self.assertEqual(Bip32Path.parse(bytes.fromhex("00")), str())
 
     def test_build(self):
