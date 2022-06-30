@@ -1,8 +1,4 @@
-import os
-if os.getenv("LEDGERWALLET_HIDRAW", "").lower() in ["1", "true"]:
-    import hidraw as hid
-else:
-    import hid
+import hid
 
 from .device import Device
 
@@ -76,10 +72,7 @@ class HidDevice(Device):
 
     def close(self):
         if self.opened:
-            try:
-                self.device.close()
-            except:
-                pass
+            self.device.close()
         self.opened = False
 
 
