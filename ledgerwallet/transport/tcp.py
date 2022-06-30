@@ -36,11 +36,11 @@ class TcpDevice(Device):
         data_to_send = int.to_bytes(len(data), 4, "big") + data
         self.socket.send(data_to_send)
 
-    def read(self) -> bytes:
+    def read(self, timeout: int = 0) -> bytes:
         packet_len = int.from_bytes(self.socket.recv(4), "big")
         return self.socket.recv(packet_len + 2)
 
-    def exchange(self, data: bytes):
+    def exchange(self, data: bytes, timeout: int = 0):
         self.write(data)
         return self.read()
 

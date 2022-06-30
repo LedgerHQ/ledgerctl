@@ -17,11 +17,11 @@ class Device(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def read(self) -> bytes:
+    def read(self, timeout: int = 0) -> bytes:
         raise NotImplementedError
 
     @abstractmethod
-    def exchange(self, data: bytes) -> bytes:
+    def exchange(self, data: bytes, timeout: int = 0) -> bytes:
         raise NotImplementedError
 
     @abstractmethod
