@@ -68,7 +68,7 @@ class HidDevice(Device):
 
     def exchange(self, data: bytes, timeout: int = 1000):
         self.write(data)
-        return self.read(timeout)
+        return self.read(timeout=timeout)
 
     def close(self):
         if self.opened:
