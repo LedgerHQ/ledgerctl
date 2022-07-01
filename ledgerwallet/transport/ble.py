@@ -12,7 +12,7 @@ queue: asyncio.Queue = asyncio.Queue()
 
 
 async def ble_discover():
-    devices = await BleakScanner.discover(2)
+    devices = await BleakScanner.discover(timeout=1.)
     return devices
 
 
@@ -22,7 +22,7 @@ def callback(sender, data):
 
 
 async def _get_client(ble_address: str) -> BleakClient:
-    device = await BleakScanner.find_device_by_address(ble_address, timeout=2.0)
+    device = await BleakScanner.find_device_by_address(ble_address, timeout=1.0)
     if not device:
         raise BleakError(f"Device with address {ble_address} could not be found.")
 
