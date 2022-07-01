@@ -4,7 +4,6 @@ from ledgerwallet import utils
 
 
 class UtilsModuleTest(TestCase):
-
     def test_serialize(self):
         sample = b"some bytes"
         result = utils.serialize(sample)
@@ -14,8 +13,8 @@ class UtilsModuleTest(TestCase):
     def test_unserialize(self):
         sample = bytes.fromhex("0304050607")
         result, rest = utils.unserialize(sample)
-        self.assertEqual(result, sample[1:1+sample[0]])
-        self.assertEqual(rest, sample[1+sample[0]:])
+        self.assertEqual(result, sample[1 : 1 + sample[0]])
+        self.assertEqual(rest, sample[1 + sample[0] :])
 
     def test_unserialize_too_small(self):
         sample = bytes.fromhex("01")
@@ -23,5 +22,7 @@ class UtilsModuleTest(TestCase):
             utils.unserialize(sample)
 
     def test_flags_to_string(self):
-        self.assertEqual(utils.flags_to_string(5333),
-                         "issuer,signed,derive_master,global_pin,debug,custom_ca,no_run")
+        self.assertEqual(
+            utils.flags_to_string(5333),
+            "issuer,signed,derive_master,global_pin,debug,custom_ca,no_run",
+        )

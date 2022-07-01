@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 
 class Device(ABC):
-
     @classmethod
     @abstractmethod
     def enumerate_devices(cls):

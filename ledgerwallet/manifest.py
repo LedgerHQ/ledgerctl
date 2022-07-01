@@ -22,9 +22,11 @@ def _image_to_packed_buffer(im: Image, palette: Dict, bits_per_pixel: int) -> by
     # Row first
     for row in range(height):
         for col in range(width):
-            # Return an index in the indexed colors list for indexed address spaces
-            # left to right
-            # Perform implicit rotation here (0,0) is left top in BAGL, and generally left bottom for various canvas
+            # Return an index in the indexed colors list for indexed address
+            # spaces left to right.
+            #
+            # Perform implicit rotation here (0,0) is left top in BAGL, and
+            # generally left bottom for various canvas.
             color_index = im.getpixel((col, row))
 
             # Remap index by luminance
@@ -141,7 +143,7 @@ class AppManifest(object):
             elif entry == "derivationPath":
                 derivation_paths: Dict[str, Optional[int]] = {
                     "paths": None,
-                    "curve": None
+                    "curve": None,
                 }
                 for derivation_entry in value:
                     if derivation_entry == "curves":
