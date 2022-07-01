@@ -127,3 +127,24 @@ $ ledgerctl -v run Bitcoin
 => e0d8000007426974636f696e
 <= 9000
 ```
+
+## Contributing
+
+### Pre-commit checks
+
+> **Note:** It's advised to install `pre-commit` using
+> [`pipx`](https://github.com/pypa/pipx)
+
+Before submitting your pull-request, please make sure that all
+[pre-commit](https://pre-commit.com/) hooks are passing. They can be locally
+installed with the following command:
+
+```console
+pre-commit install
+```
+
+And executed with:
+
+```console
+pre-commit run --all-files
+```
