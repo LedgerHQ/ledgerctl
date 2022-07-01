@@ -1,5 +1,6 @@
-import requests
 from typing import Optional
+
+import requests
 
 from ledgerwallet.hsmscript import HsmScript
 from ledgerwallet.ledgerserver import LedgerServer

@@ -11,8 +11,8 @@ from ledgerwallet.client import (
     LEDGER_HSM_URL,
     CommException,
     LedgerClient,
+    NoLedgerDeviceException,
 )
-from ledgerwallet.client import NoLedgerDeviceException
 from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
 

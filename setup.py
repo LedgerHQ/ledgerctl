@@ -1,6 +1,7 @@
 import codecs
-from setuptools import find_packages, setup
 from os import path
+
+from setuptools import find_packages, setup
 
 
 def read(rel_path):

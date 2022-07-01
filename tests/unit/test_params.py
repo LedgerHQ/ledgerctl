@@ -2,8 +2,13 @@ from unittest import TestCase
 
 from construct import StreamError
 
-from ledgerwallet.params import Asn1Length, Bip32Path, DerivationPath, \
-    Dependency, Dependencies
+from ledgerwallet.params import (
+    Asn1Length,
+    Bip32Path,
+    Dependencies,
+    Dependency,
+    DerivationPath,
+)
 
 
 class Asn1LengthTest(TestCase):
