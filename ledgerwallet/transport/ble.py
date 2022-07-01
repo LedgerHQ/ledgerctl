@@ -1,4 +1,5 @@
 import asyncio
+import os
 from bleak import BleakClient, BleakScanner
 from bleak.exc import BleakError
 from typing import List
@@ -98,14 +99,17 @@ class BleDevice(object):
 
     @classmethod
     def enumerate_devices(cls):
-        loop = asyncio.get_event_loop()
-        discovered_devices = loop.run_until_complete(ble_discover())
-        devices = []
-        for device in discovered_devices:
-            if device.name is not None:
-                if device.name.startswith("Nano X"):
-                    devices.append(BleDevice(device))
-        return devices
+        if "LEDGER_USE_BLE" in os.environ:
+            loop = asyncio.get_event_loop()
+            discovered_devices = loop.run_until_complete(ble_discover())
+            devices = []
+            for device in discovered_devices:
+                if device.name is not None:
+                    if device.name.startswith("Nano X"):
+                        devices.append(BleDevice(device))
+            return devices
+        else:
+            return []
 
     def __str__(self):
         return "[BLE Device] {} ({})".format(self.device.name, self.device.address)
