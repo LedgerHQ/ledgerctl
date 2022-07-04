@@ -59,7 +59,8 @@ class SimpleServer(LedgerServer):
             certificate_signature_array, _ = unserialize(item)
             certificate_signature = certificate_signature_array
 
-            # first cert contains a header field which holds the certificate's public key role
+            # First cert contains a header field which holds the certificate's
+            # public key role
             if i == 0:
                 # device_public_key = certificate_public_key
                 certificate_signed_data = (

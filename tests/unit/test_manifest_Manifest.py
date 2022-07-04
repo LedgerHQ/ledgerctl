@@ -50,6 +50,7 @@ class ManifestTest(TestCase):
         self.assertEqual(manifest.serialize_parameters(), b"")
 
     def test_serialize_parameters(self):
+        # fmt: off
         expected = bytes.fromhex(
             "01" +  # BolosTag 'AppName'
             "09" + "736f6d65206e616d65" +  # "some name"
@@ -63,6 +64,9 @@ class ManifestTest(TestCase):
             "03" + "8000002c80000000000000ff" +                # "44'/0'/255"
             "05" + "8000002c80000000800000000000000100000190"  # "44'/0'/0'/1/400"
         )
-        with patch('ledgerwallet.manifest.icon_from_file', lambda x: b'\x01\x02\x03\x04'):
+        # fmt: on
+        with patch(
+            "ledgerwallet.manifest.icon_from_file", lambda x: b"\x01\x02\x03\x04"
+        ):
             result = self.manifest.serialize_parameters()
         self.assertEqual(result, expected)

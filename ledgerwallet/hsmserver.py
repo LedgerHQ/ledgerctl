@@ -1,5 +1,6 @@
-import requests
 from typing import Optional
+
+import requests
 
 from ledgerwallet.hsmscript import HsmScript
 from ledgerwallet.ledgerserver import LedgerServer
@@ -50,7 +51,7 @@ class HsmServer(LedgerServer):
         # TODO: handle errors
         response.ParseFromString(req.content)
 
-        self.last_request_id = (response.id.encode() if response.id else b'')
+        self.last_request_id = response.id.encode() if response.id else b""
         if len(response.exception) != 0:
             raise Exception(f"HSM Error: {response.exception}")
         return response.response

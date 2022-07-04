@@ -278,7 +278,7 @@ class LedgerClient(object):
         )
 
         load_size = min(end_addr - start_addr - offset, MAX_CHUNK_SIZE)
-        # max_load_size = 0xf0 - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH - SCP_MAC_LENGTH
+        # max_load_size = 0xf0 - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH - SCP_MAC_LENGTH # noqa
         max_load_size = 0x80
 
         load_address = start_addr + offset

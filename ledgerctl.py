@@ -11,8 +11,8 @@ from ledgerwallet.client import (
     LEDGER_HSM_URL,
     CommException,
     LedgerClient,
+    NoLedgerDeviceException,
 )
-from ledgerwallet.client import NoLedgerDeviceException
 from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
 
@@ -111,7 +111,8 @@ def list_apps(get_client, remote, url, key):
     client = get_client()
     rows = []
 
-    # Always list apps using a remote server on Nano X, as custom SCP channels cannot be established
+    # Always list apps using a remote server on Nano X, as custom SCP channels
+    # cannot be established
     if client.target_id == 0x33000004:
         remote = True
     for app in client.list_apps_remote(url, key) if remote else client.apps:
@@ -249,7 +250,8 @@ def delete_ca(get_client):
             raise
 
 
-# Taken from https://web.archive.org/web/20111010015624/http://blogmag.net/blog/read/38/Print_human_readable_file_size
+# Taken from
+# https://web.archive.org/web/20111010015624/http://blogmag.net/blog/read/38/Print_human_readable_file_size
 def sizeof_fmt(num, suffix="B"):
     for unit in ("", "K", "M"):
         if abs(num) < 1024.0:
