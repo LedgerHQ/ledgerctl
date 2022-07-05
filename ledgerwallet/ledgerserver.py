@@ -15,7 +15,7 @@ class LedgerServer(ABC):
         pass
 
     @abstractmethod
-    def send_certicate_chain(self, chain):
+    def send_certificate_chain(self, chain):
         pass
 
     def get_shared_secret(self):

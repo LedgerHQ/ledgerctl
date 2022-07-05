@@ -262,7 +262,7 @@ class LedgerClient(object):
             if len(certificate) == 0:
                 break
             client_chain.append(certificate)
-        server.send_certicate_chain(client_chain)
+        server.send_certificate_chain(client_chain)
 
         # Mutual authentication done, retrieve shared secret
         self.apdu_exchange(LedgerIns.MUTUAL_AUTHENTICATE)
