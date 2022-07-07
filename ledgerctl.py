@@ -1,5 +1,6 @@
 import configparser
 import os
+import re
 import sys
 
 import click
@@ -11,6 +12,7 @@ from ledgerwallet.client import (
     LEDGER_HSM_URL,
     CommException,
     LedgerClient,
+    LedgerIns,
     NoLedgerDeviceException,
 )
 from ledgerwallet.crypto.ecc import PrivateKey
@@ -314,6 +316,40 @@ def info(get_client):
 def upgrade_firmware(get_client, firmware_name, firmware_key, url, key):
     client = get_client()
     client.upgrade_firmware(firmware_name, firmware_key, url, key)
+
+
+@cli.command(
+    help="Perform quick onboarding from command line. Device must be reset and booted in recovery mode (press some buttons during the boot)."  # noqa
+)
+@click.argument("pin")
+@click.argument("words")
+@click.option(
+    "--id", help="Identity number to initialize", default=0, type=click.IntRange(0, 2)
+)
+@click.option("--prefix", help="Derivation prefix")
+@click.option("--passphrase", help="Derivation passphrase")
+@click.pass_obj
+def onboard(connect, pin, passphrase, words, id, prefix):
+    # Check pin argument
+    if not re.match("^[0-9]{4,8}$", pin):
+        raise ValueError("Invalid PIN format")
+
+    data = bytearray()
+    for string in (pin, prefix, passphrase, words):
+        if string:
+            as_bytes = string.encode()
+            data.append(len(as_bytes))
+            data += as_bytes
+        else:
+            data.append(0)
+
+    client = connect()
+    try:
+        client.apdu_exchange(LedgerIns.ONBOARD, data, p1=id)
+    except CommException as e:
+        raise RuntimeError(
+            "Onboarding failed (are you in recovery mode?): {:#x}".format(e.sw)
+        )
 
 
 if __name__ == "__main__":

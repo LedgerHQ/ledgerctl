@@ -41,6 +41,7 @@ class LedgerIns(enum.IntEnum):
     VALIDATE_CERTIFICATE = 0x51
     GET_CERTIFICATE = 0x52
     MUTUAL_AUTHENTICATE = 0x53
+    ONBOARD = 0xD0
     RUN_APP = 0xD8
     # Commands for custom endorsement
     ENDORSE_SET_START = 0xC0
