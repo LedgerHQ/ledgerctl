@@ -39,7 +39,7 @@ setup(
         "hidapi",
         "intelhex",
         "Pillow",
-        "protobuf>=3.6",
+        "protobuf>=3.20",
         "requests",
         "tabulate",
     ],
