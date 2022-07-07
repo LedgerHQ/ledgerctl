@@ -49,7 +49,7 @@ class SimpleServer(LedgerServer):
 
         return cert_chain
 
-    def send_certicate_chain(self, chain):
+    def send_certificate_chain(self, chain):
         assert len(chain) == 2
 
         last_dev_pub_key = PublicKey(self.master_public)

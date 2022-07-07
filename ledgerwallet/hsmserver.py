@@ -73,6 +73,6 @@ class HsmServer(LedgerServer):
         public_key = self.public_key
         return [serialize(public_key) + serialize(server_signature)]
 
-    def send_certicate_chain(self, chain):
+    def send_certificate_chain(self, chain):
         for certificate in chain:
             self.query(certificate)
