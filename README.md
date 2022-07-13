@@ -34,6 +34,10 @@ pip install -e .
 
 ### Device configuration
 
+> **ATTENTION:** This step is optional and only advised for **developers**. It
+> will allow the installation of apps, that weren't reviewed by Ledger, without
+> user interaction.
+
 You should install a custom certificate authority (CA) on the device to make the usage of ledgerctl easier. This certificate is used to establish a custom secure channel between the computer and the device, and identifies ledgerctl as a "trusted manager" on the device.
 
 To install a custom CA, boot the device in "Recovery" mode by pressing the right button at boot time.
