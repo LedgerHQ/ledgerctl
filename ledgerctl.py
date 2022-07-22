@@ -231,6 +231,8 @@ def install_ca(get_client, name, public_key):
             click.echo("A certificate is already installed on the device.")
         elif e.sw == 0x6802:  # INVALID_PARAMETER
             click.echo("The provided certificate is invalid.")
+        elif e.sw == 0x661E:
+            click.echo("The device is not in recovery mode.")
         else:
             raise
 
