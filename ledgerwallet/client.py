@@ -313,9 +313,20 @@ class LedgerClient(object):
         params = app_manifest.serialize_parameters()
         main_address = hex_file.start_addr["EIP"] - hex_file.minaddr()
 
-        data = struct.pack(
-            ">IIIII", code_length, data_length, len(params), flags, main_address
-        )
+        if app_manifest.has_api_level():
+            data = struct.pack(
+                ">BIIIII",
+                app_manifest.get_api_level(),
+                code_length,
+                data_length,
+                len(params),
+                flags,
+                main_address,
+            )
+        else:
+            data = struct.pack(
+                ">IIIII", code_length, data_length, len(params), flags, main_address
+            )
         self.apdu_secure_exchange(LedgerSecureIns.CREATE_APP, data)
 
         hex_file.puts(hex_file.maxaddr() + 1, params)
