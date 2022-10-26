@@ -123,11 +123,17 @@ class AppManifest(object):
         else:
             return int(self.json["flags"], 16)
 
+    def get_api_level(self) -> int:
+        return int(self.json["apiLevel"], 10)
+
     def get_binary(self) -> str:
         return os.path.join(self.path, self.json["binary"])
 
     def get_target_id(self) -> int:
         return int(self.json["targetId"], 16)
+
+    def has_api_level(self) -> bool:
+        return self.json.get("apiLevel") is not None
 
     def serialize_parameters(self) -> bytes:
         parameters = []
