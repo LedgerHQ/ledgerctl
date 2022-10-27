@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from .device import Device
 from .hid import HidDevice
 from .tcp import TcpDevice
@@ -12,15 +14,11 @@ def enumerate_devices():
     return devices
 
 
-class open_device:
+@contextmanager
+def open_device(dev: Device):
     """Open a device in a context manager."""
-
-    def __init__(self, device: Device):
-        self.device = device
-
-    def __enter__(self):
-        self.device.open()
-        return self.device
-
-    def __exit__(self, *exc_details):
-        self.device.close()
+    try:
+        dev.open()
+        yield dev
+    finally:
+        dev.close()
