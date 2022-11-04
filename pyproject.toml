@@ -1,2 +1,47 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "ledgerwallet"
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS :: MacOS X",
+]
+dynamic = ["version", "description"]
+requires-python = ">=3.7"
+dependencies = [
+    "click >=8.0",
+    "construct >=2.10",
+    "cryptography >=2.5",
+    "ecdsa",
+    "hidapi",
+    "intelhex",
+    "Pillow",
+    "protobuf >=3.20",
+    "requests",
+    "tabulate",
+]
+
+[project.urls]
+Home = "https://github.com/LedgerHQ/ledgerctl"
+
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+preview = true
+
+[tool.bandit]
+skips = ["B101"]
