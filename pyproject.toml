@@ -35,9 +35,6 @@ dependencies = [
 [project.urls]
 Home = "https://github.com/LedgerHQ/ledgerctl"
 
-[tool.mypy]
-ignore_missing_imports = true
-
 [tool.isort]
 profile = "black"
 
