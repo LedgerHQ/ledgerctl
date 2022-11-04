@@ -35,6 +35,9 @@ dependencies = [
 [project.urls]
 Home = "https://github.com/LedgerHQ/ledgerctl"
 
+[project.scripts]
+ledgerctl = "ledgerctl:cli"
+
 [tool.isort]
 profile = "black"
 
