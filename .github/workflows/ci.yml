@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Install (with dependencies)
       run: pip install .
     - name: Install test dependencies
@@ -24,6 +24,6 @@ jobs:
     - name: Running unit tests
       run: nosetests --with-coverage --cover-package ledgerwallet --cover-xml tests/unit/
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3
       with:
         name: codecov-ledgerwallet
