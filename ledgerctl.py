@@ -16,7 +16,7 @@ from ledgerwallet.client import (
     NoLedgerDeviceException,
 )
 from ledgerwallet.crypto.ecc import PrivateKey
-from ledgerwallet.manifest import AppManifest
+from ledgerwallet.manifest import AppManifestToml
 
 _remote_options = [
     click.option("--url", type=str, default=LEDGER_HSM_URL, help="Server URL."),
@@ -141,13 +141,15 @@ def list_apps(get_client, remote, url, key):
     is_flag=True,
 )
 @click.pass_obj
-def install_app(get_client, manifest: AppManifest, force):
+def install_app(get_client, manifest: AppManifestToml, force):
     client = get_client()
-    app_manifest = AppManifest(manifest)
+    version = client.get_version_info()
+
+    app_manifest = AppManifestToml(manifest)
     try:
         if force:
             client.delete_app(app_manifest.app_name)
-        client.install_app(app_manifest)
+        client.install_app(app_manifest, str(version.target_id))
     except CommException as e:
         if e.sw == 0x6985:
             click.echo("Operation has been canceled by the user.")

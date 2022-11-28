@@ -26,7 +26,7 @@ from ledgerwallet.crypto.scp import SCP
 from ledgerwallet.hsmscript import HsmScript
 from ledgerwallet.hsmserver import HsmServer
 from ledgerwallet.ledgerserver import LedgerServer
-from ledgerwallet.manifest import AppManifest
+from ledgerwallet.manifest import AppManifestToml
 from ledgerwallet.proto.listApps_pb2 import AppList
 from ledgerwallet.simpleserver import SimpleServer
 from ledgerwallet.transport import enumerate_devices
@@ -300,23 +300,28 @@ class LedgerClient(object):
         for offset in range(0, end_addr - start_addr, MAX_CHUNK_SIZE):
             self._load_chunk(hex_file, segment, offset)
 
-    def install_app(self, app_manifest: AppManifest):
-        hex_file = IntelHex(app_manifest.get_binary())
+    def install_app(self, app_manifest: AppManifestToml, device: str):
+        if not app_manifest.is_device_defined(device):
+            raise Exception(
+                "Manifest has no installation information about the current device"
+            )
+
+        hex_file = IntelHex(app_manifest.get_binary(device))
         code_length = hex_file.maxaddr() - hex_file.minaddr() + 1
-        data_length = app_manifest.data_size
+        data_length = app_manifest.data_size(device)
 
         code_length -= data_length
         assert code_length % 64 == 0  # code length must be aligned
 
-        flags = app_manifest.get_application_flags()  # not handled yet
+        flags = app_manifest.get_application_flags(device)  # not handled yet
 
-        params = app_manifest.serialize_parameters()
+        params = app_manifest.serialize_parameters(device)
         main_address = hex_file.start_addr["EIP"] - hex_file.minaddr()
 
-        if app_manifest.has_api_level():
+        if app_manifest.has_api_level(device):
             data = struct.pack(
                 ">BIIIII",
-                app_manifest.get_api_level(),
+                app_manifest.get_api_level(device),
                 code_length,
                 data_length,
                 len(params),

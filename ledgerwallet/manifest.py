@@ -1,11 +1,16 @@
 import collections
 import colorsys
-import json
 import math
 import os
+import sys
 from typing import Dict, List, Optional
 
 from PIL import Image
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import toml as tomllib
 
 from ledgerwallet import params
 
@@ -99,74 +104,88 @@ def icon_from_file(image_file: str) -> bytes:
     return header + image_data
 
 
-class AppManifest(object):
+class AppManifestToml(object):
     def __init__(self, filename):
-        with open(filename) as f:
-            self.path = os.path.dirname(filename)
-            self.json = json.load(f)
-            assert "targetId" in self.json and "binary" in self.json
+        self.path = os.path.dirname(filename)
+        if sys.version_info >= (3, 11):
+            with open(filename, "rb") as f:
+                self.toml = tomllib.load(f)
+        else:
+            with open(filename, "r") as f:
+                self.toml = tomllib.load(f)
 
     @property
     def app_name(self) -> str:
-        return self.json["name"]
+        return self.toml["name"]
 
-    @property
-    def data_size(self) -> int:
-        if "dataSize" not in self.json:
+    def is_device_defined(self, device) -> bool:
+        if device in self.toml:
+            return "binary" in self.toml[device]
+        return False
+
+    def data_size(self, device) -> int:
+        if "dataSize" not in self.toml[device]:
             return 0
         else:
-            return self.json["dataSize"]
+            return self.toml[device]["dataSize"]
 
-    def get_application_flags(self) -> int:
-        if "flags" not in self.json:
+    def get_application_flags(self, device) -> int:
+        if "flags" not in self.toml[device]:
             return 0
         else:
-            return int(self.json["flags"], 16)
+            return int(self.toml[device]["flags"], 16)
 
-    def get_api_level(self) -> int:
-        return int(self.json["apiLevel"], 10)
+    def get_api_level(self, device) -> int:
+        level = self.toml[device]["apiLevel"]
+        if isinstance(level, int):
+            return int(level)
+        return int(level, 10)
 
-    def get_binary(self) -> str:
-        return os.path.join(self.path, self.json["binary"])
+    def get_binary(self, device) -> str:
+        return os.path.join(self.path, self.toml[device]["binary"])
 
-    def get_target_id(self) -> int:
-        return int(self.json["targetId"], 16)
+    def has_api_level(self, device) -> bool:
+        if device == "0x33100004":
+            return self.toml[device].get("apiLevel") is not None
+        return False
 
-    def has_api_level(self) -> bool:
-        return self.json.get("apiLevel") is not None
-
-    def serialize_parameters(self) -> bytes:
+    def serialize_parameters(self, device) -> bytes:
         parameters = []
-        for entry, value in self.json.items():
+        for entry, value in self.toml.items():
             if entry == "name":
                 parameters.append({"type_": "BOLOS_TAG_APPNAME", "value": value})
             elif entry == "version":
                 parameters.append({"type_": "BOLOS_TAG_APPVERSION", "value": value})
-            elif entry == "icon":
-                parameters.append(
-                    {"type_": "BOLOS_TAG_ICON", "value": icon_from_file(value)}
-                )
-            elif entry == "derivationPath":
-                derivation_paths: Dict[str, Optional[int]] = {
-                    "paths": None,
-                    "curve": None,
-                }
-                for derivation_entry in value:
-                    if derivation_entry == "curves":
-                        curves = 0
-                        for curve in value["curves"]:
-                            if curve == "secp256k1":
-                                curves |= params.CURVE_SECP256K1
-                            elif curve == "prime256r1":
-                                curves |= params.CURVE_PRIME256R1
-                            elif curve == "ed25519":
-                                curves |= params.CURVE_ED25519
-                            elif curve == "bls12381g1":
-                                curves |= params.CURVE_BLS12381G1
-                            derivation_paths["curve"] = curves
-                    elif derivation_entry == "paths":
-                        derivation_paths["paths"] = value["paths"]
-                parameters.append(
-                    {"type_": "BOLOS_TAG_DERIVEPATH", "value": derivation_paths}
-                )
+            elif entry == device:
+                for device_entry, device_value in self.toml[entry].items():
+                    if device_entry == "icon":
+                        parameters.append(
+                            {
+                                "type_": "BOLOS_TAG_ICON",
+                                "value": icon_from_file(device_value),
+                            }
+                        )
+                    elif device_entry == "derivationPath":
+                        derivation_paths: Dict[str, Optional[int]] = {
+                            "paths": None,
+                            "curve": None,
+                        }
+                        for derivation_entry in device_value:
+                            if derivation_entry == "curves":
+                                curves = 0
+                                for curve in device_value["curves"]:
+                                    if curve == "secp256k1":
+                                        curves |= params.CURVE_SECP256K1
+                                    elif curve == "prime256r1":
+                                        curves |= params.CURVE_PRIME256R1
+                                    elif curve == "ed25519":
+                                        curves |= params.CURVE_ED25519
+                                    elif curve == "bls12381g1":
+                                        curves |= params.CURVE_BLS12381G1
+                                    derivation_paths["curve"] = curves
+                            elif derivation_entry == "paths":
+                                derivation_paths["paths"] = device_value["paths"]
+                        parameters.append(
+                            {"type_": "BOLOS_TAG_DERIVEPATH", "value": derivation_paths}
+                        )
         return params.AppParams.build(parameters)

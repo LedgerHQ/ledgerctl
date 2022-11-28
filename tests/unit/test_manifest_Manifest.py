@@ -1,53 +1,65 @@
-import json
+import sys
 from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
 
-from ledgerwallet.manifest import AppManifest
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import toml as tomllib
+
+from ledgerwallet.manifest import AppManifestToml
 
 
 class ManifestTest(TestCase):
     def setUp(self):
         self.data_dir = Path(__file__).parent / "data"
-        self.json_path = self.data_dir / "manifest.json"
-        self.assertTrue(self.json_path.is_file())
-        self.manifest = AppManifest(str(self.json_path))
+        self.toml_path = self.data_dir / "manifest.toml"
+        self.assertTrue(self.toml_path.is_file())
+        self.manifest = AppManifestToml(str(self.toml_path))
 
     def test___init__(self):
-        self.assertEqual(self.manifest.path, str(self.json_path.parent))
-        with self.json_path.open() as filee:
-            self.assertEqual(self.manifest.json, json.load(filee))
+        self.assertEqual(self.manifest.path, str(self.toml_path.parent))
+        if sys.version_info >= (3, 11):
+            with self.toml_path.open("rb") as filee:
+                self.assertEqual(self.manifest.toml, tomllib.load(filee))
+        else:
+            with self.toml_path.open("r") as filee:
+                self.assertEqual(self.manifest.toml, tomllib.load(filee))
 
     def test___init__error(self):
-        with self.assertRaises(AssertionError):
-            AppManifest(str(self.data_dir / "empty_manifest.json"))  # missing key
+        manifest = AppManifestToml(str(self.data_dir / "missing_binary_manifest.toml"))
+        self.assertEqual(manifest.is_device_defined("1234"), False)
         with self.assertRaises(FileNotFoundError):
-            AppManifest("/this/path/should/not/exist")  # file does not exist (right?)
+            AppManifestToml(
+                "/this/path/should/not/exist"
+            )  # file does not exist (right?)
 
     def test_app_name(self):
         self.assertEqual(self.manifest.app_name, "some name")
 
     def test_data_size(self):
-        self.assertEqual(self.manifest.data_size, 42)
+        self.assertEqual(self.manifest.data_size("1234"), 42)
 
     def test_get_application_flags(self):
-        self.assertEqual(self.manifest.get_application_flags(), 0x9999)
+        self.assertEqual(self.manifest.get_application_flags("1234"), 0x9999)
 
     def test_get_binary(self):
-        self.assertEqual(self.manifest.get_binary(), str(self.data_dir / "some binary"))
-
-    def test_get_target_id(self):
-        self.assertEqual(self.manifest.get_target_id(), 0x1234)
+        self.assertEqual(
+            self.manifest.get_binary("1234"), str(self.data_dir / "some binary")
+        )
 
     def test_properties_with_minimal_manifest(self):
-        manifest = AppManifest(str(self.data_dir / "minimal_manifest.json"))
+        manifest = AppManifestToml(str(self.data_dir / "minimal_manifest.toml"))
         with self.assertRaises(KeyError):
             manifest.app_name
-        self.assertEqual(manifest.data_size, 0)
-        self.assertEqual(manifest.get_application_flags(), 0)
-        self.assertEqual(manifest.get_binary(), str(self.data_dir / "some binary"))
-        self.assertEqual(manifest.get_target_id(), 0x1234)
-        self.assertEqual(manifest.serialize_parameters(), b"")
+        self.assertEqual(manifest.data_size("1234"), 0)
+        self.assertEqual(manifest.get_application_flags("1234"), 0)
+        self.assertEqual(
+            manifest.get_binary("1234"), str(self.data_dir / "some binary")
+        )
+        self.assertEqual(manifest.serialize_parameters("1234"), b"")
+        self.assertEqual(manifest.is_device_defined("1234"), True)
 
     def test_serialize_parameters(self):
         # fmt: off
@@ -68,5 +80,6 @@ class ManifestTest(TestCase):
         with patch(
             "ledgerwallet.manifest.icon_from_file", lambda x: b"\x01\x02\x03\x04"
         ):
-            result = self.manifest.serialize_parameters()
+            result = self.manifest.serialize_parameters("1234")
+
         self.assertEqual(result, expected)

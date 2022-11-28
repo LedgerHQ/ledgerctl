@@ -82,7 +82,7 @@ ledgerctl delete Bitcoin
 
 Loading an application on the device is currently bound to the SDK and to the build process.
 
-Installation of custom apps differ from the way provided by the SDK. To keep the install process simple, we chose to use "Manifest" files for applications. Manifests are JSON files which contain the required parameters to install the application. You can find an example manifest in the tests/app directory.
+Installation of custom apps differ from the way provided by the SDK. To keep the install process simple, we chose to use "Manifest" files for applications. Manifests are TOML files which contain the required parameters to install the application. You can find an example manifest in the tests/app directory.
 
 Manifest entries are pretty straightforward if you are familiar with the BOLOS SDK, except one of them: `dataSize`. That entry specifies the size of the writable area of the application. This is the size needed by the application to save persistent data. Its value seldom changes.
 
@@ -101,21 +101,27 @@ python3 -m ledgerblue.loadApp --curve secp256k1 --tlv --targetId 0x31100004 --ta
 To install it with ledgerctl:
 
 1. Retrieve `dataSize` using the above one-liner.
-2. Create a manifest file app.json in the ledger-app-btc directory:
+2. Create a manifest file app.toml in the ledger-app-btc directory:
 
-```json
-{
-    "name": "Bitcoin",
-    "version": "1.3.13",
-    "icon": "nanos_app_bitcoin.gif",
-    "targetId": "0x31100004",
-    "flags": "0xA50",
-    "derivationPath": {
-        "curves": ["secp256k1"]
-    },
-    "binary": "bin/app.hex",
-    "dataSize": 64
-}
+```toml
+name = "Bitcoin"
+version" = "1.3.13"
+
+[0x31100004] #NanoS
+icon = "nanos_app_bitcoin.gif"
+flags = "0xA50"
+derivationPath = {curves = ["secp256k1"]}
+binary = bin/app.hex
+dataSize = 64
+
+[0x33100004] #NanoSP
+icon = "nanosp_app_bitcoin.gif"
+flags = "0xA50"
+derivationPath = {curves = ["secp256k1"]}
+binary = bin/app_nanosp.hex
+dataSize = 64
+
+
 ```
 
 3. Install with `ledgerctl install app.json`.

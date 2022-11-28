@@ -1,0 +1,7 @@
+name = "SSH/PGP Agent"
+version = "0.0.4"
+
+[0x31100003]
+icon = "nanos_app_ssh.gif"
+derivationPath = { curves = ["prime256r1", "ed25519"],paths = ["44'/535348'", "13'", "17'"]}
+binary = "app.hex"

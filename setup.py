@@ -42,6 +42,7 @@ setup(
         "protobuf>=3.20",
         "requests",
         "tabulate",
+        "toml",
     ],
     packages=find_packages(),
     include_package_data=True,
