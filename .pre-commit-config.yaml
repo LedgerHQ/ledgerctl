@@ -31,9 +31,10 @@ repos:
       - id: mypy
         exclude: ^ledgerwallet/proto/
         additional_dependencies:
-          - types-protobuf
+          - types-protobuf==3.20.4.6
           - types-requests
           - types-tabulate
+          - types-toml
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.4
