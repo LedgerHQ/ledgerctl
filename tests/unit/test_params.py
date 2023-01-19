@@ -24,11 +24,11 @@ class Asn1LengthTest(TestCase):
 
     def test_parse(self):
         for k, v in self.sample.items():
-            self.assertEquals(Asn1Length.parse(v), k)
+            self.assertEqual(Asn1Length.parse(v), k)
 
     def test_build(self):
         for k, v in self.sample.items():
-            self.assertEquals(Asn1Length.build(k), v)
+            self.assertEqual(Asn1Length.build(k), v)
 
 
 class Bip32PathTest(TestCase):
@@ -44,7 +44,7 @@ class Bip32PathTest(TestCase):
 
     def test_parse(self):
         for k, v in self.sample.items():
-            self.assertEquals(Bip32Path.parse(v), k)
+            self.assertEqual(Bip32Path.parse(v), k)
 
     def test_parse_empty(self):
         # not in sample as not the parse/build behavior is not symmetrical
@@ -52,7 +52,7 @@ class Bip32PathTest(TestCase):
 
     def test_build(self):
         for k, v in self.sample.items():
-            self.assertEquals(Bip32Path.build(k), v)
+            self.assertEqual(Bip32Path.build(k), v)
 
     def test_parse_error(self):
         errors = [

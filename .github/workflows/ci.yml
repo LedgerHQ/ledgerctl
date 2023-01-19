@@ -17,12 +17,16 @@ jobs:
     steps:
     - name: Clone
       uses: actions/checkout@v3
+
     - name: Install (with dependencies)
       run: pip install .
+
     - name: Install test dependencies
-      run: pip install nose coverage
-    - name: Running unit tests
-      run: nosetests --with-coverage --cover-package ledgerwallet --cover-xml tests/unit/
+      run: pip install -r tests/unit/requirements.txt
+
+    - name: Run unit tests
+      run: pytest --cov ledgerwallet --cov-report term --cov-report=xml tests/unit/
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
