@@ -31,7 +31,7 @@ repos:
       - id: mypy
         exclude: ^ledgerwallet/proto/
         additional_dependencies:
-          - types-protobuf
+          - types-protobuf>=3.20,<4
           - types-requests
           - types-tabulate
 
