@@ -301,22 +301,28 @@ class LedgerClient(object):
             self._load_chunk(hex_file, segment, offset)
 
     def install_app(self, app_manifest: AppManifest):
-        hex_file = IntelHex(app_manifest.get_binary())
+        version_info = self.get_version_info()
+        device = str(version_info.target_id)
+
+        app_manifest.assert_compatible_device(version_info.target_id)
+
+        hex_file = IntelHex(app_manifest.get_binary(device))
         code_length = hex_file.maxaddr() - hex_file.minaddr() + 1
-        data_length = app_manifest.data_size
+        data_length = app_manifest.data_size(device)
 
         code_length -= data_length
         assert code_length % 64 == 0  # code length must be aligned
 
-        flags = app_manifest.get_application_flags()  # not handled yet
+        flags = app_manifest.get_application_flags(device)  # not handled yet
 
-        params = app_manifest.serialize_parameters()
+        params = app_manifest.serialize_parameters(device)
         main_address = hex_file.start_addr["EIP"] - hex_file.minaddr()
 
-        if app_manifest.has_api_level():
+        level = app_manifest.get_api_level(device)
+        if level:
             data = struct.pack(
                 ">BIIIII",
-                app_manifest.get_api_level(),
+                level,
                 code_length,
                 data_length,
                 len(params),
