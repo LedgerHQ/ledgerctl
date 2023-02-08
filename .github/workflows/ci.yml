@@ -55,7 +55,7 @@ jobs:
         FLIT_PASSWORD: ${{ secrets.TEST_PYPI_PUBLIC_API_TOKEN }}
 
     - name: STABLE - Deploy on pypi.org
-      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/develop' && contains(github.event.head_commit.message, 'release')
+      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, 'release')
       run: flit publish
       env:
         FLIT_USERNAME: __token__
