@@ -36,7 +36,7 @@ dependencies = [
 Home = "https://github.com/LedgerHQ/ledgerctl"
 
 [project.scripts]
-ledgerctl = "ledgerctl:cli"
+ledgerctl = "ledgerwallet.ledgerctl:cli"
 
 [tool.isort]
 profile = "black"
