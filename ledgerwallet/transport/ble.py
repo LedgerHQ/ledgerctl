@@ -1,8 +1,9 @@
 import asyncio
 import os
+from typing import List
+
 from bleak import BleakClient, BleakScanner
 from bleak.exc import BleakError
-from typing import List
 
 HANDLE_CHAR_ENABLE_NOTIF = 13
 HANDLE_CHAR_WRITE = 16
@@ -13,7 +14,7 @@ queue: asyncio.Queue = asyncio.Queue()
 
 
 async def ble_discover():
-    devices = await BleakScanner.discover(timeout=1.)
+    devices = await BleakScanner.discover(timeout=1.0)
     return devices
 
 

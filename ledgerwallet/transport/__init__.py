@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 
-from .device import Device
 from .ble import BleDevice
+from .device import Device
 from .hid import HidDevice
 from .tcp import TcpDevice
 
