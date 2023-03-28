@@ -97,6 +97,7 @@ PrefixedString = PascalString(Asn1Length, "utf8")
 AppName = PrefixedString
 Version = PrefixedString
 Icon = Prefixed(Asn1Length, GreedyBytes)
+PendingReviewFlag = Prefixed(Asn1Length, Byte)
 
 CURVE_SECP256K1 = 1
 CURVE_PRIME256R1 = 2
@@ -128,6 +129,7 @@ class BolosTag(enum.IntEnum):
     BOLOS_TAG_ICON = 3
     BOLOS_TAG_DERIVEPATH = 4
     BOLOS_TAG_DEPENDENCY = 6
+    BOLOS_TAG_PENDING_REVIEW = 159
 
 
 Param = Struct(
@@ -135,6 +137,7 @@ Param = Struct(
     value=Switch(
         this.type_,
         {
+            "BOLOS_TAG_PENDING_REVIEW": PendingReviewFlag,
             "BOLOS_TAG_APPNAME": AppName,
             "BOLOS_TAG_APPVERSION": Version,
             "BOLOS_TAG_ICON": Icon,
@@ -150,6 +153,7 @@ AppParams = GreedyRange(Param)
 def main():
     params1 = AppParams.build(
         [
+            {"type_": "BOLOS_TAG_PENDING_REVIEW", "value": b"\x01"},
             {"type_": "BOLOS_TAG_APPNAME", "value": "SSH/PGP Agent"},
             {"type_": "BOLOS_TAG_APPVERSION", "value": "0.0.4"},
             {
@@ -171,6 +175,7 @@ def main():
     )
 
     params2 = (
+        b"\x9F\x01\x01"
         b"\x01\x0D\x53\x53\x48\x2F\x50\x47\x50\x20\x41\x67\x65\x6E\x74"
         b"\x02\x05\x30\x2E\x30\x2E\x34\x03\x29\x01\x00\x00\x00\x00\xFF"
         b"\xFF\xFF\x00\x00\x18\xFC\x24\x02\x24\x0A\x24\x1A\x7E\x32\x66"

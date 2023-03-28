@@ -44,6 +44,7 @@ class AppManifestJson(AppManifest):
                 parameters.append(
                     {"type_": "BOLOS_TAG_DERIVEPATH", "value": derivation_paths}
                 )
+        parameters.append({"type_": "BOLOS_TAG_PENDING_REVIEW", "value": 1})
         return params.AppParams.build(parameters)
 
     def assert_compatible_device(self, device_id: int):

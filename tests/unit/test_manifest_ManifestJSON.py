@@ -47,7 +47,7 @@ class ManifestTestJson(TestCase):
         self.assertEqual(
             manifest_json.get_binary(""), str(self.data_dir / "some binary")
         )
-        self.assertEqual(manifest_json.serialize_parameters(""), b"")
+        self.assertEqual(manifest_json.serialize_parameters(""), b"\x9F\x01\x01")
 
     def test_serialize_parameters(self):
         # fmt: off
@@ -62,7 +62,9 @@ class ManifestTestJson(TestCase):
             "23" +  # 35: following size
             "05" +  # secp256k1 (1) + ed25519 (4)
             "03" + "8000002c80000000000000ff" +                # "44'/0'/255"
-            "05" + "8000002c80000000800000000000000100000190"  # "44'/0'/0'/1/400"
+            "05" + "8000002c80000000800000000000000100000190" +  # "44'/0'/0'/1/400"
+            "9F" +  # BolosTag 'PendingReview'
+            "01" + "01"
         )
         # fmt: on
         with patch(
