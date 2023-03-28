@@ -159,6 +159,21 @@ class NoLedgerDeviceException(Exception):
     pass
 
 
+class IdentitySCP:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def identity_wrap(data: bytes) -> bytes:
+        return data
+
+    def wrap(self, data):
+        return self.identity_wrap(data)
+
+    def unwrap(self, data):
+        return self.identity_wrap(data)
+
+
 LOG = logging.getLogger("ledgerwallet")
 
 
@@ -169,10 +184,17 @@ class LedgerClient(object):
             if len(devices) == 0:
                 raise NoLedgerDeviceException("No Ledger device has been found.")
             device = devices[0]
+            self.scp = None
+        elif device == "Offline":
+            from ledgerwallet.transport.file import FileDevice
+
+            device = FileDevice()
+            self.scp = IdentitySCP()
+        else:
+            self.scp = None
         self.device = device
         self.cla = cla
         self._target_id = None
-        self.scp = None
         if private_key is None:
             self.private_key = PrivateKey()
         else:
@@ -280,7 +302,7 @@ class LedgerClient(object):
 
         load_size = min(end_addr - start_addr - offset, MAX_CHUNK_SIZE)
         # max_load_size = 0xf0 - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH - SCP_MAC_LENGTH # noqa
-        max_load_size = 0x80
+        max_load_size = 0xD0
 
         load_address = start_addr + offset
         chunk_offset = start_addr
@@ -300,12 +322,7 @@ class LedgerClient(object):
         for offset in range(0, end_addr - start_addr, MAX_CHUNK_SIZE):
             self._load_chunk(hex_file, segment, offset)
 
-    def install_app(self, app_manifest: AppManifest):
-        version_info = self.get_version_info()
-        device = str(version_info.target_id)
-
-        app_manifest.assert_compatible_device(version_info.target_id)
-
+    def _install_app_helper(self, app_manifest: AppManifest, device: str):
         hex_file = IntelHex(app_manifest.get_binary(device))
         code_length = hex_file.maxaddr() - hex_file.minaddr() + 1
         data_length = app_manifest.data_size(device)
@@ -339,6 +356,16 @@ class LedgerClient(object):
         for segment in hex_file.segments():
             self._load_segment(hex_file, segment)
         self.apdu_secure_exchange(LedgerSecureIns.COMMIT)
+
+    def generate_load_apdus(self, app_manifest: AppManifest):
+        self._install_app_helper(app_manifest, "")
+
+    def install_app(self, app_manifest: AppManifest):
+        version_info = self.get_version_info()
+        device = str(version_info.target_id)
+
+        app_manifest.assert_compatible_device(version_info.target_id)
+        self._install_app_helper(app_manifest, device)
 
     def delete_app(self, app: Union[str, bytes]):
         if isinstance(app, str):

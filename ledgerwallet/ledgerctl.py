@@ -162,9 +162,16 @@ def list_apps(get_client, remote, url, key):
     help="Delete using application hash instead of application name",
     is_flag=True,
 )
+@click.option(
+    "--offline",
+    help=(
+        "Do not attempt to connect to a device, print exchanges in the terminal"
+        " instead."
+    ),
+    is_flag=True,
+)
 @click.pass_obj
-def install_app(get_client, manifest: AppManifest, force):
-    client = get_client()
+def install_app(get_client, manifest: AppManifest, force, offline):
     try:
         app_manifest: AppManifest = AppManifestToml(manifest)
     except TOMLDecodeError as toml_error:
@@ -175,6 +182,13 @@ def install_app(get_client, manifest: AppManifest, force):
             )
         except JSONDecodeError as json_error:
             raise ManifestFormatError(toml_error, json_error)
+
+    if offline:
+        client = LedgerClient(device="Offline")
+        client.generate_load_apdus(app_manifest)
+        return
+
+    client = get_client()
 
     try:
         if force:
@@ -210,14 +224,27 @@ def install_remote_app(get_client, app_path, key_path, url, key):
     help="Delete using application hash instead of application name",
     is_flag=True,
 )
+@click.option(
+    "--offline",
+    help=(
+        "Do not attempt to connect to a device, and print exchanges in the terminal"
+        " instead."
+    ),
+    is_flag=True,
+)
 @click.pass_obj
-def delete_app(get_client, app, by_hash):
+def delete_app(get_client, app, by_hash, offline):
     if by_hash:
         data = bytes.fromhex(app)
     else:
         data = app
     try:
-        get_client().delete_app(data)
+        if offline:
+            client = LedgerClient(device="Offline")
+        else:
+            client = get_client()
+
+        client.delete_app(data)
     except CommException as e:
         if e.sw == 0x6985:
             click.echo("Operation has been canceled by the user.")
