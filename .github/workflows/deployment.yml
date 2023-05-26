@@ -22,7 +22,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Install Flit
+    - name: Install dependencies
       run: |
         python -m pip install pip --upgrade
         pip install build twine
@@ -43,6 +43,18 @@ jobs:
             echo "- Not triggered from tag, will be deployed on test.pypi.org"; \
         fi
         echo "- Tag version: ${{ env.TAG_VERSION }}"
+
+    - name: Check version against CHANGELOG
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        CHANGELOG_VERSION=$(grep -Po '(?<=## \[)(\d\.)+[^\]]' CHANGELOG.md | head -n 1)
+        if [ "${{ env.TAG_VERSION }}" == "${CHANGELOG_VERSION}" ]; \
+        then \
+            exit 0; \
+        else \
+            echo "Tag '${{ env.TAG_VERSION }}' and CHANGELOG '${CHANGELOG_VERSION}' versions mismatch!"; \
+            exit 1; \
+        fi
 
     - name: Publish Python package on test.pypi.org
       if: |
