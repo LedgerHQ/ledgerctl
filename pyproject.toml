@@ -1,6 +1,10 @@
 [build-system]
-requires = ["flit_scm"]
-build-backend = "flit_scm:buildapi"
+requires = [
+    "setuptools>=45",
+    "setuptools_scm[toml]>=6.2",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "ledgerwallet"
@@ -44,13 +48,6 @@ ledgerctl = "ledgerwallet.ledgerctl:cli"
 
 [tool.setuptools_scm]
 write_to = "ledgerwallet/__version__.py"
-
-[tool.flit.sdist]
-exclude = [
-    ".gitignore",
-    ".github/",
-    "tests/"
-]
 
 [tool.isort]
 profile = "black"
