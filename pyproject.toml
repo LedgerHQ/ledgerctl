@@ -1,10 +1,14 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["flit_scm"]
+build-backend = "flit_scm:buildapi"
 
 [project]
 name = "ledgerwallet"
-readme = "README.md"
+authors = [
+    {name = "Ledger", email = "hello@ledger.fr" }
+]
+description = "Library to communicate with Ledger Nano S/X and Speculos"
+readme = {file = "README.md", content-type = "text/markdown"}
 license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -16,7 +20,7 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
     "Operating System :: MacOS :: MacOS X",
 ]
-dynamic = ["version", "description"]
+dynamic = ["version"]
 requires-python = ">=3.7"
 dependencies = [
     "click >=8.0",
@@ -37,6 +41,16 @@ Home = "https://github.com/LedgerHQ/ledgerctl"
 
 [project.scripts]
 ledgerctl = "ledgerwallet.ledgerctl:cli"
+
+[tool.setuptools_scm]
+write_to = "ledgerwallet/__version__.py"
+
+[tool.flit.sdist]
+exclude = [
+    ".gitignore",
+    ".github/",
+    "tests/"
+]
 
 [tool.isort]
 profile = "black"
