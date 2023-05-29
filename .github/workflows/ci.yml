@@ -1,14 +1,17 @@
-name: Build and test LedgerWallet
+name: Build, test and deploy LedgerWallet
 
 on:
+  workflow_dispatch:
   push:
+    tags:
+      - '*'
     branches:
       - master
       - develop
   pull_request:
     branches:
-      - develop
       - master
+      - develop
 
 jobs:
   build_install_test:
@@ -18,11 +21,17 @@ jobs:
     - name: Clone
       uses: actions/checkout@v3
 
+    - name: Update tools
+      run: pip install -U pip setuptools
+
     - name: Install (with dependencies)
       run: pip install .
 
     - name: Install test dependencies
       run: pip install -r tests/unit/requirements.txt
+
+    - name: Check that the executable runs correctly
+      run: ledgerctl
 
     - name: Run unit tests
       run: pytest --cov ledgerwallet --cov-report term --cov-report=xml tests/unit/
@@ -31,3 +40,83 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         name: codecov-ledgerwallet
+
+  deploy:
+    name: Build the Python package and deploy if needed
+    runs-on: ubuntu-latest
+    needs: [build_install_test]
+    steps:
+    - name: Clone
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install dependencies
+      run: |
+        python -m pip install pip --upgrade
+        pip install build twine
+
+    - name: Build the Python package
+      run: |
+        python -m build
+        twine check dist/*
+        echo "TAG_VERSION=$(python -c 'from ledgerwallet import __version__; print(__version__)')" >> "$GITHUB_ENV"
+
+    - name: Display current status
+      run: |
+        echo "Current status is:"
+        if [[ ${{ github.ref }} == "refs/tags/"* ]]; \
+        then \
+            echo "- Triggered from tag, will be deployed on pypi.org"; \
+        else \
+            echo "- Not triggered from tag, will be deployed on test.pypi.org"; \
+        fi
+        echo "- Tag version: ${{ env.TAG_VERSION }}"
+
+    - name: Check version against CHANGELOG
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        CHANGELOG_VERSION=$(grep -Po '(?<=## \[)(\d\.)+[^\]]' CHANGELOG.md | head -n 1)
+        if [ "${{ env.TAG_VERSION }}" == "${CHANGELOG_VERSION}" ]; \
+        then \
+            exit 0; \
+        else \
+            echo "Tag '${{ env.TAG_VERSION }}' and CHANGELOG '${CHANGELOG_VERSION}' versions mismatch!"; \
+            exit 1; \
+        fi
+
+    - name: Publish Python package on test.pypi.org
+      if: |
+        success() &&
+        github.event_name == 'push' &&
+        !startsWith(github.ref, 'refs/tags/')
+      run: python -m twine upload --repository testpypi dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PUBLIC_API_TOKEN  }}
+        TWINE_NON_INTERACTIVE: 1
+
+    - name: Publish Python package on pypi.org
+      if: |
+        success() &&
+        github.event_name == 'push' &&
+        startsWith(github.ref, 'refs/tags/')
+      run: python -m twine upload dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_PUBLIC_API_TOKEN  }}
+        TWINE_NON_INTERACTIVE: 1
+
+    - name: Publish a release on the repo
+      if: |
+        success() &&
+        github.event_name == 'push' &&
+        startsWith(github.ref, 'refs/tags/')
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        automatic_release_tag: "v${{ env.TAG_VERSION }}"
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: true
+        files: |
+          LICENSE
+          dist/

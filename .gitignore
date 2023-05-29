@@ -62,6 +62,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+# setuptools_scm stuff:
+__version__.py
+
 # Sphinx documentation
 docs/_build/
 

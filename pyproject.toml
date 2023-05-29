@@ -1,2 +1,60 @@
-[tool.mypy]
-ignore_missing_imports = true
+[build-system]
+requires = [
+    "setuptools>=45",
+    "setuptools_scm[toml]>=6.2",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ledgerwallet"
+authors = [
+    {name = "Ledger", email = "hello@ledger.fr" }
+]
+description = "Library to communicate with Ledger Nano S/X and Speculos"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS :: MacOS X",
+]
+dynamic = ["version"]
+requires-python = ">=3.7"
+dependencies = [
+    "click >=8.0",
+    "construct >=2.10",
+    "cryptography >=2.5",
+    "ecdsa",
+    "hidapi",
+    "intelhex",
+    "Pillow",
+    "protobuf >=3.20,<4",
+    "requests",
+    "tabulate",
+    "toml",
+]
+
+[project.urls]
+Home = "https://github.com/LedgerHQ/ledgerctl"
+
+[project.scripts]
+ledgerctl = "ledgerwallet.ledgerctl:cli"
+
+[tool.setuptools_scm]
+write_to = "ledgerwallet/__version__.py"
+local_scheme = "no-local-version"
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+preview = true
+
+[tool.bandit]
+skips = ["B101"]
