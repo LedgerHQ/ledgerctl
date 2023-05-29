@@ -48,6 +48,7 @@ ledgerctl = "ledgerwallet.ledgerctl:cli"
 
 [tool.setuptools_scm]
 write_to = "ledgerwallet/__version__.py"
+local_scheme = "no-local-version"
 
 [tool.isort]
 profile = "black"
