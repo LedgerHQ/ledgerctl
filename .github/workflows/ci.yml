@@ -7,11 +7,9 @@ on:
       - '*'
     branches:
       - master
-      - develop
   pull_request:
     branches:
       - master
-      - develop
 
 jobs:
   build_install_test:
@@ -86,10 +84,7 @@ jobs:
         fi
 
     - name: Publish Python package on test.pypi.org
-      if: |
-        success() &&
-        github.event_name == 'push' &&
-        !startsWith(github.ref, 'refs/tags/')
+      if: success() && github.event_name == 'push'
       run: python -m twine upload --repository testpypi dist/*
       env:
         TWINE_USERNAME: __token__
@@ -97,10 +92,7 @@ jobs:
         TWINE_NON_INTERACTIVE: 1
 
     - name: Publish Python package on pypi.org
-      if: |
-        success() &&
-        github.event_name == 'push' &&
-        startsWith(github.ref, 'refs/tags/')
+      if: success() && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       run: python -m twine upload dist/*
       env:
         TWINE_USERNAME: __token__
