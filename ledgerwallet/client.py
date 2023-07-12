@@ -164,12 +164,14 @@ LOG = logging.getLogger("ledgerwallet")
 
 class LedgerClient(object):
     def __init__(self, device=None, cla=0xE0, private_key=None):
+        self.device = None
         if device is None:
             devices = enumerate_devices()
             if len(devices) == 0:
                 raise NoLedgerDeviceException("No Ledger device has been found.")
             device = devices[0]
         self.device = device
+        LOG.debug(self.device)
         self.cla = cla
         self._target_id = None
         self.scp = None
@@ -179,8 +181,12 @@ class LedgerClient(object):
             self.private_key = PrivateKey(private_key)
         self.device.open()
 
+    def __del__(self):
+        self.close()
+
     def close(self):
-        self.device.close()
+        if self.device is not None:
+            self.device.close()
 
     def raw_exchange(self, data: bytes) -> bytes:
         LOG.debug("=> " + data.hex())

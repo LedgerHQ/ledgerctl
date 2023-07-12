@@ -1,10 +1,11 @@
 from contextlib import contextmanager
 
+from .ble import BleDevice
 from .device import Device
 from .hid import HidDevice
 from .tcp import TcpDevice
 
-DEVICE_CLASSES = [TcpDevice, HidDevice]
+DEVICE_CLASSES = [TcpDevice, HidDevice, BleDevice]
 
 
 def enumerate_devices():

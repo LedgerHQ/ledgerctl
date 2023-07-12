@@ -136,6 +136,10 @@ $ ledgerctl -v run Bitcoin
 <= 9000
 ```
 
+### Using BLE
+
+BLE scanning is disabled by default. It can be activated by setting an environment variable named `LEDGER_USE_BLE`.
+
 ## Contributing
 
 ### Pre-commit checks

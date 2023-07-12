@@ -27,6 +27,7 @@ classifiers = [
 dynamic = ["version"]
 requires-python = ">=3.7"
 dependencies = [
+    "bleak",
     "click >=8.0",
     "construct >=2.10",
     "cryptography >=2.5",
