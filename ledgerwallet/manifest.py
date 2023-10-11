@@ -105,6 +105,10 @@ class AppManifest(ABC):
     def app_name(self) -> str:
         return self.dic.get("name", "")
 
+    @property
+    def target_id(self) -> str:
+        return self.dic.get("targetId", "")
+
     @abstractmethod
     def data_size(self, device: str) -> int:
         pass

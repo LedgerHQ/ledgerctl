@@ -25,6 +25,7 @@ from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
 from ledgerwallet.manifest_json import AppManifestJson
 from ledgerwallet.manifest_toml import AppManifestToml
+from ledgerwallet.transport import FileDevice
 
 
 class ManifestFormatError(Exception):
@@ -85,6 +86,14 @@ def get_private_key() -> bytes:
         private_key = bytes.fromhex(new_private_key.serialize().hex())
 
     return private_key
+
+
+def get_file_device(target_id, output_file):
+    try:
+        return LedgerClient(FileDevice(target_id, out=output_file))
+    except NoLedgerDeviceException as exception:
+        click.echo(exception)
+        sys.exit(0)
 
 
 @click.group()
@@ -162,9 +171,15 @@ def list_apps(get_client, remote, url, key):
     help="Delete using application hash instead of application name",
     is_flag=True,
 )
+@click.option(
+    "-d",
+    "--dump",
+    help="Dump APDU installation file.",
+    is_flag=False,
+    flag_value="out.apdu",
+)
 @click.pass_obj
-def install_app(get_client, manifest: AppManifest, force):
-    client = get_client()
+def install_app(get_client, manifest: AppManifest, force, dump):
     try:
         app_manifest: AppManifest = AppManifestToml(manifest)
     except TOMLDecodeError as toml_error:
@@ -177,10 +192,20 @@ def install_app(get_client, manifest: AppManifest, force):
             raise ManifestFormatError(toml_error, json_error)
 
     try:
-        if force:
-            client.delete_app(app_manifest.app_name)
-            client.close()
+        if dump:
+            try:
+                dump_file = open(dump, "w")
+            except OSError:
+                click.echo("Unable to open file {} for dump.".format(dump))
+                sys.exit(1)
+            click.echo("Dumping APDU installation file to {}".format(dump))
+            client = get_file_device(app_manifest.target_id, dump_file)
+        else:
             client = get_client()
+            if force:
+                client.delete_app(app_manifest.app_name)
+                client.close()
+                client = get_client()
         client.install_app(app_manifest)
     except CommException as e:
         if e.sw == 0x6985:
