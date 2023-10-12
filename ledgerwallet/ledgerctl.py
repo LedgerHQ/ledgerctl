@@ -88,7 +88,7 @@ def get_private_key() -> bytes:
     return private_key
 
 
-def get_file_device(target_id, output_file):
+def get_file_device(output_file, target_id="0x33000004"):
     try:
         return LedgerClient(FileDevice(target_id, out=output_file))
     except NoLedgerDeviceException as exception:
@@ -199,7 +199,7 @@ def install_app(get_client, manifest: AppManifest, force, dump):
                 click.echo("Unable to open file {} for dump.".format(dump))
                 sys.exit(1)
             click.echo("Dumping APDU installation file to {}".format(dump))
-            client = get_file_device(app_manifest.target_id, dump_file)
+            client = get_file_device(dump_file, app_manifest.target_id)
         else:
             client = get_client()
             if force:
@@ -235,14 +235,32 @@ def install_remote_app(get_client, app_path, key_path, url, key):
     help="Delete using application hash instead of application name",
     is_flag=True,
 )
+@click.option(
+    "-d",
+    "--dump",
+    help="Dump APDU delete command file.",
+    is_flag=False,
+    flag_value="out_delete.apdu",
+)
 @click.pass_obj
-def delete_app(get_client, app, by_hash):
+def delete_app(get_client, app, by_hash, dump):
     if by_hash:
         data = bytes.fromhex(app)
     else:
         data = app
+
+    if dump:
+        try:
+            dump_file = open(dump, "w")
+        except OSError:
+            click.echo("Unable to open file {} for dump.".format(dump))
+            sys.exit(1)
+        click.echo("Dumping APDU delete command file to {}".format(dump))
+        client = get_file_device(dump_file)
+    else:
+        client = get_client()
     try:
-        get_client().delete_app(data)
+        client.delete_app(data)
     except CommException as e:
         if e.sw == 0x6985:
             click.echo("Operation has been canceled by the user.")
