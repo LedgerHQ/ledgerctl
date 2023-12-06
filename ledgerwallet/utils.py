@@ -1,5 +1,18 @@
 import logging
-from enum import Enum
+from enum import Enum, IntEnum
+
+from construct import (
+    Bytes,
+    Const,
+    FlagsEnum,
+    Hex,
+    Int8ub,
+    Int32ub,
+    Int32ul,
+    Optional,
+    PascalString,
+    Struct,
+)
 
 
 class DeviceNames(Enum):
@@ -7,6 +20,58 @@ class DeviceNames(Enum):
     LEDGER_NANO_X = "Ledger Nano X"
     LEDGER_NANO_SP = "Ledger Nano S+"
     LEDGER_BLUE = "Ledger Blue"
+
+
+class LedgerIns(IntEnum):
+    SECUINS = 0
+    GET_VERSION = 1
+    VALIDATE_TARGET_ID = 4
+    INITIALIZE_AUTHENTICATION = 0x50
+    VALIDATE_CERTIFICATE = 0x51
+    GET_CERTIFICATE = 0x52
+    MUTUAL_AUTHENTICATE = 0x53
+    ONBOARD = 0xD0
+    RUN_APP = 0xD8
+    # Commands for custom endorsement
+    ENDORSE_SET_START = 0xC0
+    ENDORSE_SET_COMMIT = 0xC2
+
+
+class LedgerSecureIns(IntEnum):
+    SET_LOAD_OFFSET = 5
+    LOAD = 6
+    FLUSH = 7
+    CRC = 8
+    COMMIT = 9
+    CREATE_APP = 11
+    DELETE_APP = 12
+    LIST_APPS = 14
+    LIST_APPS_CONTINUE = 15
+    GET_VERSION = 16
+    GET_MEMORY_INFORMATION = 17
+    SETUP_CUSTOM_CERTIFICATE = 18
+    RESET_CUSTOM_CERTIFICATE = 19
+    DELETE_APP_BY_HASH = 21
+    MCU_BOOTLOADER = 0xB0
+
+
+VersionInfo = Struct(
+    target_id=Hex(Int32ub),
+    se_version=PascalString(Int8ub, "utf-8"),
+    _flags_len=Const(b"\x04"),
+    flags=FlagsEnum(
+        Int32ul,
+        recovery_mode=1,
+        signed_mcu=2,
+        is_onboarded=4,
+        trust_issuer=8,
+        trust_custom_ca=16,
+        hsm_initialized=32,
+        pin_validated=128,
+    ),
+    mcu_version=PascalString(Int8ub, "utf-8"),
+    mcu_hash=Optional(Bytes(32)),
+)
 
 
 def enable_apdu_log():

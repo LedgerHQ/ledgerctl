@@ -1,10 +1,15 @@
 from contextlib import contextmanager
 
 from .device import Device
+from .file import FileDevice
 from .hid import HidDevice
 from .tcp import TcpDevice
 
 DEVICE_CLASSES = [TcpDevice, HidDevice]
+
+__all__ = [
+    "FileDevice",
+]
 
 
 def enumerate_devices():

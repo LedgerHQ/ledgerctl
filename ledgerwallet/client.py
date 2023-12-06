@@ -1,4 +1,3 @@
-import enum
 import logging
 import struct
 from typing import Union
@@ -6,13 +5,10 @@ from typing import Union
 from construct import (
     Bytes,
     Const,
-    FlagsEnum,
     GreedyRange,
     Hex,
     Int8ub,
     Int32ub,
-    Int32ul,
-    Optional,
     PascalString,
     Rebuild,
     Struct,
@@ -22,49 +18,15 @@ from construct import (
 from intelhex import IntelHex
 
 from ledgerwallet.crypto.ecc import PrivateKey
-from ledgerwallet.crypto.scp import SCP
+from ledgerwallet.crypto.scp import SCP, FakeSCP
 from ledgerwallet.hsmscript import HsmScript
 from ledgerwallet.hsmserver import HsmServer
 from ledgerwallet.ledgerserver import LedgerServer
 from ledgerwallet.manifest import AppManifest
 from ledgerwallet.proto.listApps_pb2 import AppList
 from ledgerwallet.simpleserver import SimpleServer
-from ledgerwallet.transport import enumerate_devices
-from ledgerwallet.utils import serialize
-
-
-class LedgerIns(enum.IntEnum):
-    SECUINS = 0
-    GET_VERSION = 1
-    VALIDATE_TARGET_ID = 4
-    INITIALIZE_AUTHENTICATION = 0x50
-    VALIDATE_CERTIFICATE = 0x51
-    GET_CERTIFICATE = 0x52
-    MUTUAL_AUTHENTICATE = 0x53
-    ONBOARD = 0xD0
-    RUN_APP = 0xD8
-    # Commands for custom endorsement
-    ENDORSE_SET_START = 0xC0
-    ENDORSE_SET_COMMIT = 0xC2
-
-
-class LedgerSecureIns(enum.IntEnum):
-    SET_LOAD_OFFSET = 5
-    LOAD = 6
-    FLUSH = 7
-    CRC = 8
-    COMMIT = 9
-    CREATE_APP = 11
-    DELETE_APP = 12
-    LIST_APPS = 14
-    LIST_APPS_CONTINUE = 15
-    GET_VERSION = 16
-    GET_MEMORY_INFORMATION = 17
-    SETUP_CUSTOM_CERTIFICATE = 18
-    RESET_CUSTOM_CERTIFICATE = 19
-    DELETE_APP_BY_HASH = 21
-    MCU_BOOTLOADER = 0xB0
-
+from ledgerwallet.transport import FileDevice, enumerate_devices
+from ledgerwallet.utils import LedgerIns, LedgerSecureIns, VersionInfo, serialize
 
 LOAD_SEGMENT_CHUNK_HEADER_LENGTH = 3
 MIN_PADDING_LENGTH = 1
@@ -91,24 +53,6 @@ ApduListAppsResponse = Struct(
             name=PascalString(Int8ub, "utf-8"),
         )
     ),
-)
-
-VersionInfo = Struct(
-    target_id=Hex(Int32ub),
-    se_version=PascalString(Int8ub, "utf-8"),
-    _flags_len=Const(b"\x04"),
-    flags=FlagsEnum(
-        Int32ul,
-        recovery_mode=1,
-        signed_mcu=2,
-        is_onboarded=4,
-        trust_issuer=8,
-        trust_custom_ca=16,
-        hsm_initialized=32,
-        pin_validated=128,
-    ),
-    mcu_version=PascalString(Int8ub, "utf-8"),
-    mcu_hash=Optional(Bytes(32)),
 )
 
 
@@ -164,15 +108,18 @@ LOG = logging.getLogger("ledgerwallet")
 
 class LedgerClient(object):
     def __init__(self, device=None, cla=0xE0, private_key=None):
+        self.scp = None
         if device is None:
             devices = enumerate_devices()
             if len(devices) == 0:
                 raise NoLedgerDeviceException("No Ledger device has been found.")
             device = devices[0]
+        elif type(device) == FileDevice:
+            self.scp = FakeSCP()
+
         self.device = device
         self.cla = cla
         self._target_id = None
-        self.scp = None
         if private_key is None:
             self.private_key = PrivateKey()
         else:

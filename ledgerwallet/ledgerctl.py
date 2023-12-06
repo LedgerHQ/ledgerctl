@@ -25,6 +25,7 @@ from ledgerwallet.crypto.ecc import PrivateKey
 from ledgerwallet.manifest import AppManifest
 from ledgerwallet.manifest_json import AppManifestJson
 from ledgerwallet.manifest_toml import AppManifestToml
+from ledgerwallet.transport import FileDevice
 
 
 class ManifestFormatError(Exception):
@@ -85,6 +86,14 @@ def get_private_key() -> bytes:
         private_key = bytes.fromhex(new_private_key.serialize().hex())
 
     return private_key
+
+
+def get_file_device(output_file, target_id="0x33000004"):
+    try:
+        return LedgerClient(FileDevice(target_id, out=output_file))
+    except NoLedgerDeviceException as exception:
+        click.echo(exception)
+        sys.exit(0)
 
 
 @click.group()
@@ -159,12 +168,18 @@ def list_apps(get_client, remote, url, key):
 @click.option(
     "-f",
     "--force",
-    help="Delete using application hash instead of application name",
+    help="Delete the app with the same name before loading the provided one.",
     is_flag=True,
 )
+@click.option(
+    "-o",
+    "--offline",
+    help="Dump APDU installation file, do not attempt to connect to a physical device.",
+    is_flag=False,
+    flag_value="out.apdu",
+)
 @click.pass_obj
-def install_app(get_client, manifest: AppManifest, force):
-    client = get_client()
+def install_app(get_client, manifest: AppManifest, force, offline):
     try:
         app_manifest: AppManifest = AppManifestToml(manifest)
     except TOMLDecodeError as toml_error:
@@ -177,10 +192,22 @@ def install_app(get_client, manifest: AppManifest, force):
             raise ManifestFormatError(toml_error, json_error)
 
     try:
-        if force:
-            client.delete_app(app_manifest.app_name)
-            client.close()
+        if offline:
+            try:
+                dump_file = open(offline, "w")
+            except OSError:
+                click.echo("Unable to open file {} for dump.".format(offline))
+                sys.exit(1)
+            click.echo("Dumping APDU installation file to {}".format(offline))
+            client = get_file_device(dump_file, app_manifest.target_id)
+            if force:
+                client.delete_app(app_manifest.app_name)
+        else:
             client = get_client()
+            if force:
+                client.delete_app(app_manifest.app_name)
+                client.close()
+                client = get_client()
         client.install_app(app_manifest)
     except CommException as e:
         if e.sw == 0x6985:
@@ -210,14 +237,34 @@ def install_remote_app(get_client, app_path, key_path, url, key):
     help="Delete using application hash instead of application name",
     is_flag=True,
 )
+@click.option(
+    "-o",
+    "--offline",
+    help=(
+        "Dump APDU delete command file, do not attempt to connect to a physical device."
+    ),
+    is_flag=False,
+    flag_value="out_delete.apdu",
+)
 @click.pass_obj
-def delete_app(get_client, app, by_hash):
+def delete_app(get_client, app, by_hash, offline):
     if by_hash:
         data = bytes.fromhex(app)
     else:
         data = app
+
+    if offline:
+        try:
+            dump_file = open(offline, "w")
+        except OSError:
+            click.echo("Unable to open file {} for dump.".format(offline))
+            sys.exit(1)
+        click.echo("Dumping APDU delete command file to {}".format(offline))
+        client = get_file_device(dump_file)
+    else:
+        client = get_client()
     try:
-        get_client().delete_app(data)
+        client.delete_app(data)
     except CommException as e:
         if e.sw == 0x6985:
             click.echo("Operation has been canceled by the user.")

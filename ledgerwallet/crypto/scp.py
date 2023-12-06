@@ -112,3 +112,18 @@ class SCP(object):
             raise Exception("Invalid SCP MAC")
         data = self._decrypt_data(encrypted_data)
         return iso9797_unpad(data)
+
+
+class FakeSCP:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def identity_wrap(data: bytes) -> bytes:
+        return data
+
+    def wrap(self, data):
+        return self.identity_wrap(data)
+
+    def unwrap(self, data):
+        return self.identity_wrap(data)
