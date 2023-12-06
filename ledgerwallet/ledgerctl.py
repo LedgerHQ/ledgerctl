@@ -168,7 +168,7 @@ def list_apps(get_client, remote, url, key):
 @click.option(
     "-f",
     "--force",
-    help="Delete using application hash instead of application name",
+    help="Delete the app with the same name before loading the provided one.",
     is_flag=True,
 )
 @click.option(
