@@ -200,6 +200,8 @@ def install_app(get_client, manifest: AppManifest, force, offline):
                 sys.exit(1)
             click.echo("Dumping APDU installation file to {}".format(offline))
             client = get_file_device(dump_file, app_manifest.target_id)
+            if force:
+                client.delete_app(app_manifest.app_name)
         else:
             client = get_client()
             if force:
