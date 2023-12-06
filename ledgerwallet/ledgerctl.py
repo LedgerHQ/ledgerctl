@@ -172,14 +172,14 @@ def list_apps(get_client, remote, url, key):
     is_flag=True,
 )
 @click.option(
-    "-d",
-    "--dump",
-    help="Dump APDU installation file.",
+    "-o",
+    "--offline",
+    help="Dump APDU installation file, do not attempt to connect to a physical device.",
     is_flag=False,
     flag_value="out.apdu",
 )
 @click.pass_obj
-def install_app(get_client, manifest: AppManifest, force, dump):
+def install_app(get_client, manifest: AppManifest, force, offline):
     try:
         app_manifest: AppManifest = AppManifestToml(manifest)
     except TOMLDecodeError as toml_error:
@@ -192,13 +192,13 @@ def install_app(get_client, manifest: AppManifest, force, dump):
             raise ManifestFormatError(toml_error, json_error)
 
     try:
-        if dump:
+        if offline:
             try:
-                dump_file = open(dump, "w")
+                dump_file = open(offline, "w")
             except OSError:
-                click.echo("Unable to open file {} for dump.".format(dump))
+                click.echo("Unable to open file {} for dump.".format(offline))
                 sys.exit(1)
-            click.echo("Dumping APDU installation file to {}".format(dump))
+            click.echo("Dumping APDU installation file to {}".format(offline))
             client = get_file_device(dump_file, app_manifest.target_id)
         else:
             client = get_client()
@@ -236,26 +236,28 @@ def install_remote_app(get_client, app_path, key_path, url, key):
     is_flag=True,
 )
 @click.option(
-    "-d",
-    "--dump",
-    help="Dump APDU delete command file.",
+    "-o",
+    "--offline",
+    help=(
+        "Dump APDU delete command file, do not attempt to connect to a physical device."
+    ),
     is_flag=False,
     flag_value="out_delete.apdu",
 )
 @click.pass_obj
-def delete_app(get_client, app, by_hash, dump):
+def delete_app(get_client, app, by_hash, offline):
     if by_hash:
         data = bytes.fromhex(app)
     else:
         data = app
 
-    if dump:
+    if offline:
         try:
-            dump_file = open(dump, "w")
+            dump_file = open(offline, "w")
         except OSError:
-            click.echo("Unable to open file {} for dump.".format(dump))
+            click.echo("Unable to open file {} for dump.".format(offline))
             sys.exit(1)
-        click.echo("Dumping APDU delete command file to {}".format(dump))
+        click.echo("Dumping APDU delete command file to {}".format(offline))
         client = get_file_device(dump_file)
     else:
         client = get_client()
