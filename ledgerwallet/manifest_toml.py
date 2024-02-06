@@ -3,7 +3,7 @@ import sys
 from typing import Optional
 
 from ledgerwallet.manifest import AppManifest, icon_from_file
-from ledgerwallet.utils import DeviceNames, get_device_name
+from ledgerwallet.utils import get_device_name
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -30,10 +30,7 @@ class AppManifestToml(AppManifest):
         return int(self.dic[device].get("flags", "0"), 16)
 
     def get_api_level(self, device: str) -> Optional[int]:
-        if (
-            get_device_name(int(device, 16)) == DeviceNames.LEDGER_NANO_SP.value
-            and "apiLevel" in self.dic[device]
-        ):
+        if "apiLevel" in self.dic[device]:
             level = self.dic[device]["apiLevel"]
             if isinstance(level, int):
                 return int(level)
