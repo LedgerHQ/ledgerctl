@@ -56,7 +56,7 @@ class AppManifestToml(AppManifest):
                         parameters.append(
                             {
                                 "type_": "BOLOS_TAG_ICON",
-                                "value": icon_from_file(device_value),
+                                "value": icon_from_file(device_value, device),
                             }
                         )
                     elif device_entry == "derivationPath":

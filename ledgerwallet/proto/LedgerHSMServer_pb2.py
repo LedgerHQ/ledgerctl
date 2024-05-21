@@ -11,19 +11,17 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-
-
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15LedgerHSMServer.proto\x12\rbluehsmserver\"7\n\tParameter\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05\x61lias\x18\x02 \x01(\t\x12\r\n\x05local\x18\x03 \x01(\x08\"\xa1\x01\n\x07Request\x12\n\n\x02id\x18\x01 \x01(\t\x12\x12\n\nparameters\x18\x02 \x01(\x0c\x12\x11\n\treference\x18\x03 \x01(\t\x12\x0b\n\x03\x65lf\x18\x04 \x01(\x0c\x12\r\n\x05\x63lose\x18\x05 \x01(\x08\x12\x12\n\nlargeStack\x18\x06 \x01(\x08\x12\x33\n\x11remote_parameters\x18\x07 \x03(\x0b\x32\x18.bluehsmserver.Parameter\"L\n\x08Response\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08response\x18\x02 \x01(\x0c\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\x11\n\texception\x18\x04 \x01(\tb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'LedgerHSMServer_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
-  DESCRIPTOR._options = None
-  _PARAMETER._serialized_start=40
-  _PARAMETER._serialized_end=95
-  _REQUEST._serialized_start=98
-  _REQUEST._serialized_end=259
-  _RESPONSE._serialized_start=261
-  _RESPONSE._serialized_end=337
+    DESCRIPTOR._options = None
+    _PARAMETER._serialized_start = 40
+    _PARAMETER._serialized_end = 95
+    _REQUEST._serialized_start = 98
+    _REQUEST._serialized_end = 259
+    _RESPONSE._serialized_start = 261
+    _RESPONSE._serialized_end = 337
 # @@protoc_insertion_point(module_scope)

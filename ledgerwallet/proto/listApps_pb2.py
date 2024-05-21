@@ -11,17 +11,16 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0elistApps.proto\x12\x08listapps\"F\n\x03\x41pp\x12\r\n\x05\x66lags\x18\x01 \x01(\r\x12\x0c\n\x04hash\x18\x02 \x01(\x0c\x12\x14\n\x0chashCodeData\x18\x03 \x01(\x0c\x12\x0c\n\x04name\x18\x04 \x01(\t\"&\n\x07\x41ppList\x12\x1b\n\x04list\x18\x01 \x03(\x0b\x32\r.listapps.Appb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x0elistApps.proto\x12\x08listapps\"F\n\x03\x41pp\x12\r\n\x05\x66lags\x18\x01 \x01(\r\x12\x0c\n\x04hash\x18\x02 \x01(\x0c\x12\x14\n\x0chashCodeData\x18\x03 \x01(\x0c\x12\x0c\n\x04name\x18\x04 \x01(\t\"&\n\x07\x41ppList\x12\x1b\n\x04list\x18\x01 \x03(\x0b\x32\r.listapps.Appb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'listApps_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
-  DESCRIPTOR._options = None
-  _APP._serialized_start=28
-  _APP._serialized_end=98
-  _APPLIST._serialized_start=100
-  _APPLIST._serialized_end=138
+    DESCRIPTOR._options = None
+    _APP._serialized_start = 28
+    _APP._serialized_end = 98
+    _APPLIST._serialized_start = 100
+    _APPLIST._serialized_end = 138
 # @@protoc_insertion_point(module_scope)

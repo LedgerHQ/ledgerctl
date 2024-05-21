@@ -1,66 +1,128 @@
 import collections
 import colorsys
+import gzip
 import math
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 from ledgerwallet import params
+from ledgerwallet.utils import DeviceNames, get_device_name
 
 MAX_COLORS = 16
 
 
-def _image_to_packed_buffer(im: Image, palette: Dict, bits_per_pixel: int) -> bytes:
+def is_power2(n):
+    return n != 0 and ((n & (n - 1)) == 0)
+
+
+def _image_to_compressed_buffer_nbgl(im: Image) -> bytes:
+    im = im.convert("L")
+    nb_colors = len(im.getcolors())
+
+    # Compute bits_per_pixel
+    # Round number of colors to a power of 2
+    if not is_power2(nb_colors):
+        nb_colors = int(pow(2, math.ceil(math.log(nb_colors, 2))))
+
+    bpp = int(math.log(nb_colors, 2))
+    # 2 or 3 BPP are not supported
+    if bpp > 1:
+        bpp = 4
+
+    if bpp == 0:
+        bpp = 1
+
+    # Invert if bpp is 1
+    if bpp == 1:
+        im = ImageOps.invert(im)
+
     width, height = im.size
 
     current_byte = 0
     current_bit = 0
     image_data = []
+    base_threshold = int(256 / nb_colors)
+    half_threshold = int(base_threshold / 2)
 
-    # Row first
-    for row in range(height):
-        for col in range(width):
-            # Return an index in the indexed colors list for indexed address
-            # spaces left to right.
-            #
-            # Perform implicit rotation here (0,0) is left top in BAGL, and
-            # generally left bottom for various canvas.
+    # col first
+    for col in reversed(range(width)):
+        for row in range(height):
+            # Return an index in the indexed colors list
+            # top to bottom
+            # Perform implicit rotation here (0,0) is left top in NBGL,
+            # and generally left bottom for various canvas
             color_index = im.getpixel((col, row))
+            color_index = int((color_index + half_threshold) / base_threshold)
 
-            # Remap index by luminance
-            color_index = palette[color_index]
+            if color_index >= nb_colors:
+                color_index = nb_colors - 1
 
             # le encoded
-            current_byte += color_index << current_bit
-            current_bit += bits_per_pixel
+            current_byte += color_index << ((8 - bpp) - current_bit)
+            current_bit += bpp
 
             if current_bit >= 8:
                 image_data.append(current_byte & 0xFF)
                 current_bit = 0
                 current_byte = 0
 
-        # Handle last byte if any
+    # Handle last byte if any
     if current_bit > 0:
         image_data.append(current_byte & 0xFF)
-    return bytes(image_data)
+
+    # Compress buffer into a gzip file
+    output_buffer = []
+    # cut into chunks of 2048 bytes max of uncompressed data
+    # (because decompression needs the full buffer)
+    full_uncompressed_size = len(image_data)
+    i = 0
+    while full_uncompressed_size > 0:
+        chunk_size = min(2048, full_uncompressed_size)
+        tmp = bytes(image_data[i : i + chunk_size])
+        compressed_buffer = gzip.compress(tmp, mtime=0)
+        output_buffer += [
+            len(compressed_buffer) & 0xFF,
+            (len(compressed_buffer) >> 8) & 0xFF,
+        ]
+        output_buffer += compressed_buffer
+        full_uncompressed_size -= chunk_size
+        i += chunk_size
+
+    # Add metadata
+    BPP_FORMATS = {1: 0, 2: 1, 4: 2}
+
+    result = [
+        width & 0xFF,
+        width >> 8,
+        height & 0xFF,
+        height >> 8,
+        (BPP_FORMATS[bpp] << 4)
+        | 1,  # 1 is gzip compression type. We only support gzip.
+        len(output_buffer) & 0xFF,
+        (len(output_buffer) >> 8) & 0xFF,
+        (len(output_buffer) >> 16) & 0xFF,
+    ]
+
+    result.extend(output_buffer)
+
+    return bytes(bytearray(result))
 
 
-def icon_from_file(image_file: str) -> bytes:
-    def is_power2(n):
-        return n != 0 and ((n & (n - 1)) == 0)
-
-    im = Image.open(image_file)
-    im.load()
+def _image_to_packed_buffer_bagl(im: Image) -> bytes:
+    width, height = im.size
     num_colors = len(im.getcolors())
-
-    assert im.mode == "P" and num_colors <= MAX_COLORS
 
     # Round number of colors to a power of 2
     if not is_power2(num_colors):
         num_colors = int(pow(2, math.ceil(math.log(num_colors, 2))))
 
     bits_per_pixel = int(math.log(num_colors, 2))
+
+    current_byte = 0
+    current_bit = 0
+    image_data = []
 
     # Reorder color map by luminance
     palette = im.getpalette()
@@ -88,14 +150,57 @@ def icon_from_file(image_file: str) -> bytes:
             new_palette.append(v[1])
             i += 1
 
+    palette = new_indices
+
     # write BPP
     header = bytes([bits_per_pixel])
     # LE color array, it is meant to be embedded as is in an array
     for i in range(num_colors):
         header += new_palette[i].to_bytes(4, "big")
 
-    image_data = _image_to_packed_buffer(im, new_indices, bits_per_pixel)
-    return header + image_data
+    # Row first
+    for row in range(height):
+        for col in range(width):
+            # Return an index in the indexed colors list for indexed address
+            # spaces left to right.
+            #
+            # Perform implicit rotation here (0,0) is left top in BAGL, and
+            # generally left bottom for various canvas.
+            color_index = im.getpixel((col, row))
+
+            # Remap index by luminance
+            color_index = palette[color_index]
+
+            # le encoded
+            current_byte += color_index << current_bit
+            current_bit += bits_per_pixel
+
+            if current_bit >= 8:
+                image_data.append(current_byte & 0xFF)
+                current_bit = 0
+                current_byte = 0
+
+    # Handle last byte if any
+    if current_bit > 0:
+        image_data.append(current_byte & 0xFF)
+    return header + bytes(image_data)
+
+
+def icon_from_file(image_file: str, device: str) -> bytes:
+    im = Image.open(image_file)
+    im.load()
+
+    assert im.mode == "P" and len(im.getcolors()) <= MAX_COLORS
+
+    if get_device_name(int(device, 16)) in [
+        DeviceNames.LEDGER_STAX.value,
+        DeviceNames.LEDGER_FLEX.value,
+    ]:
+        image_data = _image_to_compressed_buffer_nbgl(im)
+    else:
+        image_data = _image_to_packed_buffer_bagl(im)
+
+    return image_data
 
 
 class AppManifest(ABC):
