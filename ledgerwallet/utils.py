@@ -20,6 +20,8 @@ class DeviceNames(Enum):
     LEDGER_NANO_X = "Ledger Nano X"
     LEDGER_NANO_SP = "Ledger Nano S+"
     LEDGER_BLUE = "Ledger Blue"
+    LEDGER_STAX = "Ledger Stax"
+    LEDGER_FLEX = "Ledger Flex"
 
 
 class LedgerIns(IntEnum):
@@ -99,6 +101,8 @@ def get_device_name(target_id: int) -> str:
         0x31010004: DeviceNames.LEDGER_BLUE.value,  # firmware version > 2.0
         0x33000004: DeviceNames.LEDGER_NANO_X.value,
         0x33100004: DeviceNames.LEDGER_NANO_SP.value,
+        0x33200004: DeviceNames.LEDGER_STAX.value,
+        0x33300004: DeviceNames.LEDGER_FLEX.value,
     }
     return target_ids.get(target_id, "Unknown device")
 
