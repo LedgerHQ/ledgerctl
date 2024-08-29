@@ -16,7 +16,6 @@ readme = {file = "README.md", content-type = "text/markdown"}
 license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -25,7 +24,7 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
 ]
 dynamic = ["version"]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "click >=8.0",
     "construct >=2.10",
@@ -34,7 +33,7 @@ dependencies = [
     "hidapi",
     "intelhex",
     "Pillow",
-    "protobuf >=3.20,<4",
+    "protobuf >=3.20,<6",
     "requests",
     "tabulate",
     "toml",
