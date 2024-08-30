@@ -53,10 +53,13 @@ class AppManifestToml(AppManifest):
             elif entry == device:
                 for device_entry, device_value in self.dic[entry].items():
                     if device_entry == "icon":
+                        api_level = self.get_api_level(device)
                         parameters.append(
                             {
                                 "type_": "BOLOS_TAG_ICON",
-                                "value": icon_from_file(device_value, device),
+                                "value": icon_from_file(
+                                    device_value, device, api_level
+                                ),
                             }
                         )
                     elif device_entry == "derivationPath":

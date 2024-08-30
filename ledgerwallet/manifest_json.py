@@ -36,8 +36,12 @@ class AppManifestJson(AppManifest):
             elif entry == "version":
                 parameters.append({"type_": "BOLOS_TAG_APPVERSION", "value": value})
             elif entry == "icon":
+                api_level = self.get_api_level(device)
                 parameters.append(
-                    {"type_": "BOLOS_TAG_ICON", "value": icon_from_file(value, device)}
+                    {
+                        "type_": "BOLOS_TAG_ICON",
+                        "value": icon_from_file(value, device, api_level),
+                    }
                 )
             elif entry == "derivationPath":
                 derivation_paths = self.serialize_derivation_path(value)

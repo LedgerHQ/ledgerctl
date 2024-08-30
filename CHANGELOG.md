@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- For Nano S+ and X, generate NBGL compliant buffer (uncompressed) for app icon
+- For Nano S+ and X, generate NBGL compliant buffer (uncompressed) for app icon (from api_level > 5)
 
 ## [0.5.0] - 2024-05-22
 

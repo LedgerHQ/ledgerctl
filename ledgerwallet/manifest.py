@@ -189,7 +189,7 @@ def _image_to_packed_buffer_bagl(im: Image) -> bytes:
     return header + bytes(image_data)
 
 
-def icon_from_file(image_file: str, device: str) -> bytes:
+def icon_from_file(image_file: str, device: str, api_level: Optional[int]) -> bytes:
     im = Image.open(image_file)
     im.load()
 
@@ -201,10 +201,15 @@ def icon_from_file(image_file: str, device: str) -> bytes:
     ]:
         image_data = _image_to_buffer_nbgl(im, True)
 
-    elif get_device_name(int(device, 16)) in [
-        DeviceNames.LEDGER_NANO_SP.value,
-        DeviceNames.LEDGER_NANO_X.value,
-    ]:
+    elif (
+        get_device_name(int(device, 16))
+        in [
+            DeviceNames.LEDGER_NANO_SP.value,
+            DeviceNames.LEDGER_NANO_X.value,
+        ]
+        and api_level is not None
+        and api_level > 5
+    ):
         image_data = _image_to_buffer_nbgl(im, False)
     else:
         image_data = _image_to_packed_buffer_bagl(im)
