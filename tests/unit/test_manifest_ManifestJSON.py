@@ -67,7 +67,7 @@ class ManifestTestJson(TestCase):
         # fmt: on
         with patch(
             "ledgerwallet.manifest_json.icon_from_file",
-            lambda x, y: b"\x01\x02\x03\x04",
+            lambda x, y, z: b"\x01\x02\x03\x04",
         ):
             result_json = self.json_manifest.serialize_parameters("1234")
         self.assertEqual(result_json, expected)

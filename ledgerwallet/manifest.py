@@ -17,7 +17,7 @@ def is_power2(n):
     return n != 0 and ((n & (n - 1)) == 0)
 
 
-def _image_to_compressed_buffer_nbgl(im: Image) -> bytes:
+def _image_to_buffer_nbgl(im: Image, compress: bool) -> bytes:
     im = im.convert("L")
     nb_colors = len(im.getcolors())
 
@@ -72,23 +72,26 @@ def _image_to_compressed_buffer_nbgl(im: Image) -> bytes:
     if current_bit > 0:
         image_data.append(current_byte & 0xFF)
 
-    # Compress buffer into a gzip file
-    output_buffer = []
-    # cut into chunks of 2048 bytes max of uncompressed data
-    # (because decompression needs the full buffer)
-    full_uncompressed_size = len(image_data)
-    i = 0
-    while full_uncompressed_size > 0:
-        chunk_size = min(2048, full_uncompressed_size)
-        tmp = bytes(image_data[i : i + chunk_size])
-        compressed_buffer = gzip.compress(tmp, mtime=0)
-        output_buffer += [
-            len(compressed_buffer) & 0xFF,
-            (len(compressed_buffer) >> 8) & 0xFF,
-        ]
-        output_buffer += compressed_buffer
-        full_uncompressed_size -= chunk_size
-        i += chunk_size
+    if not compress:
+        output_buffer = image_data
+    else:
+        # Compress buffer into a gzip file
+        output_buffer = []
+        # cut into chunks of 2048 bytes max of uncompressed data
+        # (because decompression needs the full buffer)
+        full_uncompressed_size = len(image_data)
+        i = 0
+        while full_uncompressed_size > 0:
+            chunk_size = min(2048, full_uncompressed_size)
+            tmp = bytes(image_data[i : i + chunk_size])
+            compressed_buffer = gzip.compress(tmp, mtime=0)
+            output_buffer += [
+                len(compressed_buffer) & 0xFF,
+                (len(compressed_buffer) >> 8) & 0xFF,
+            ]
+            output_buffer += compressed_buffer
+            full_uncompressed_size -= chunk_size
+            i += chunk_size
 
     # Add metadata
     BPP_FORMATS = {1: 0, 2: 1, 4: 2}
@@ -99,7 +102,7 @@ def _image_to_compressed_buffer_nbgl(im: Image) -> bytes:
         height & 0xFF,
         height >> 8,
         (BPP_FORMATS[bpp] << 4)
-        | 1,  # 1 is gzip compression type. We only support gzip.
+        | (1 if compress else 0),  # 0 is no compression, 1 is gzip compression type
         len(output_buffer) & 0xFF,
         (len(output_buffer) >> 8) & 0xFF,
         (len(output_buffer) >> 16) & 0xFF,
@@ -186,7 +189,7 @@ def _image_to_packed_buffer_bagl(im: Image) -> bytes:
     return header + bytes(image_data)
 
 
-def icon_from_file(image_file: str, device: str) -> bytes:
+def icon_from_file(image_file: str, device: str, api_level: Optional[int]) -> bytes:
     im = Image.open(image_file)
     im.load()
 
@@ -196,7 +199,18 @@ def icon_from_file(image_file: str, device: str) -> bytes:
         DeviceNames.LEDGER_STAX.value,
         DeviceNames.LEDGER_FLEX.value,
     ]:
-        image_data = _image_to_compressed_buffer_nbgl(im)
+        image_data = _image_to_buffer_nbgl(im, True)
+
+    elif (
+        get_device_name(int(device, 16))
+        in [
+            DeviceNames.LEDGER_NANO_SP.value,
+            DeviceNames.LEDGER_NANO_X.value,
+        ]
+        and api_level is not None
+        and api_level > 5
+    ):
+        image_data = _image_to_buffer_nbgl(im, False)
     else:
         image_data = _image_to_packed_buffer_bagl(im)
 
