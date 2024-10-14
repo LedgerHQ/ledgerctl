@@ -27,7 +27,7 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
-          - types-protobuf>=3.20,<4
+          - types-protobuf>=5.28,<6
           - types-requests
           - types-tabulate
           - types-toml

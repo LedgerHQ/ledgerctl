@@ -34,7 +34,7 @@ dependencies = [
     "hidapi",
     "intelhex",
     "Pillow",
-    "protobuf >=3.20,<4",
+    "protobuf >=5.28,<6",
     "requests",
     "tabulate",
     "toml",
