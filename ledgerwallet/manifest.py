@@ -17,7 +17,7 @@ def is_power2(n):
     return n != 0 and ((n & (n - 1)) == 0)
 
 
-def _image_to_buffer_nbgl(im: Image, compress: bool) -> bytes:
+def _image_to_buffer_nbgl(im: Image, compress: bool, reverse_1bpp: bool) -> bytes:
     im = im.convert("L")
     nb_colors = len(im.getcolors())
 
@@ -58,6 +58,9 @@ def _image_to_buffer_nbgl(im: Image, compress: bool) -> bytes:
 
             if color_index >= nb_colors:
                 color_index = nb_colors - 1
+
+            if bpp == 1 and reverse_1bpp:
+                color_index = (color_index + 1) & 0x1
 
             # le encoded
             current_byte += color_index << ((8 - bpp) - current_bit)
@@ -199,7 +202,7 @@ def icon_from_file(image_file: str, device: str, api_level: Optional[int]) -> by
         DeviceNames.LEDGER_STAX.value,
         DeviceNames.LEDGER_FLEX.value,
     ]:
-        image_data = _image_to_buffer_nbgl(im, True)
+        image_data = _image_to_buffer_nbgl(im, True, False)
 
     elif (
         get_device_name(int(device, 16))
@@ -210,7 +213,7 @@ def icon_from_file(image_file: str, device: str, api_level: Optional[int]) -> by
         and api_level is not None
         and api_level > 5
     ):
-        image_data = _image_to_buffer_nbgl(im, False)
+        image_data = _image_to_buffer_nbgl(im, False, True)
     else:
         image_data = _image_to_packed_buffer_bagl(im)
 
