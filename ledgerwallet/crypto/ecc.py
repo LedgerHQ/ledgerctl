@@ -1,4 +1,5 @@
 import hashlib
+from typing import Optional
 
 import ecdsa.ellipticcurve
 import ecdsa.util
@@ -31,7 +32,7 @@ class PublicKey(object):
 
 
 class PrivateKey(object):
-    def __init__(self, sk: bytes = None):
+    def __init__(self, sk: Optional[bytes] = None):
         if sk is None:
             self.sk = SigningKey.generate(SECP256k1)
         else:

@@ -138,6 +138,14 @@ $ ledgerctl -v run Bitcoin
 
 ## Contributing
 
+### Rebuild the proto files
+
+```shell
+for file in ledgerwallet/proto/*.proto; do \
+    python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. $file; \
+done
+```
+
 ### Pre-commit checks
 
 > **Note:** It's advised to install `pre-commit` using
