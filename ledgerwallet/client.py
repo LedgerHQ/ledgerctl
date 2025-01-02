@@ -1,6 +1,6 @@
 import logging
 import struct
-from typing import Union
+from typing import Optional, Union
 
 from construct import (
     Bytes,
@@ -63,7 +63,7 @@ class AppInfo(object):
         flags: int,
         code_data_hash: bytes,
         full_hash: bytes,
-        data: bytes = None,
+        data: Optional[bytes] = None,
     ):
         self.name = name
         self.flags = flags

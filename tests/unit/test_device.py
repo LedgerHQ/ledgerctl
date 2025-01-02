@@ -18,9 +18,11 @@ class MockDevice(Device):
 
     def read(self, timeout: int = 0) -> bytes:
         """Do nothing."""
+        return b""
 
     def exchange(self, data: bytes, timeout: int = 0) -> bytes:
         """Do nothing."""
+        return b""
 
     def close(self):
         self.is_open = False
