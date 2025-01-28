@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=45",
+    "setuptools>=75",
     "setuptools_scm[toml]>=6.2",
     "wheel"
 ]
@@ -11,21 +11,23 @@ name = "ledgerwallet"
 authors = [
     {name = "Ledger", email = "hello@ledger.fr" }
 ]
-description = "Library to communicate with Ledger Nano S/X and Speculos"
+description = "Library to communicate between the Ledger devices (Nano S/S+/X, Stax and Flex) and Speculos"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: MacOS :: MacOS X",
 ]
 dynamic = ["version"]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dependencies = [
     "click >=8.0",
     "construct >=2.10",
