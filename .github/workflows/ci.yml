@@ -15,9 +15,19 @@ jobs:
   build_install_test:
     name: Build, install and test LedgerWallet
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+
     steps:
     - name: Clone
       uses: actions/checkout@v3
+
+    - name: Setup Python version
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python_version }}
 
     - name: Update tools
       run: pip install -U pip setuptools
@@ -51,6 +61,10 @@ jobs:
 
     - name: Install dependencies
       run: |
+        # Needed to workaround this bug https://github.com/pypa/setuptools/issues/4759
+        # To be removed when it's fixed
+        pip install -U packaging
+
         python -m pip install pip --upgrade
         pip install build twine
 
