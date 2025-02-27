@@ -11,10 +11,6 @@ on:
     branches:
       - master
 
-permissions:
-  id-token: write
-  attestations: write
-
 jobs:
   build_install_test:
     name: Build, install and test LedgerWallet
@@ -57,7 +53,11 @@ jobs:
     name: Build the Python package and deploy if needed
     runs-on: public-ledgerhq-shared-small
     needs: [build_install_test]
+    permissions:
+      id-token: write
+      attestations: write
     steps:
+
     - name: Clone
       uses: actions/checkout@v3
       with:
