@@ -26,3 +26,51 @@ class UtilsModuleTest(TestCase):
             utils.flags_to_string(5333),
             "issuer,signed,derive_master,global_pin,debug,custom_ca,no_run",
         )
+
+    def test_version_info_extended_build_and_parse(self):
+        # Build an extended VersionInfo with optional fields present
+        payload = utils.VersionInfo.build(
+            dict(
+                target_id=0x33000004,  # NANO_X
+                se_version="1.2.3",
+                flags=0,
+                mcu_version="2.3.4",
+                mcu_bl_version="5.6.7",
+                hw_version="01.00",
+                language="en",
+                _recover_state_len=0x01,
+                recover_state=0x02,
+            )
+        )
+
+        parsed = utils.VersionInfo.parse(payload)
+        self.assertEqual(int(parsed.target_id), 0x33000004)
+        self.assertEqual(parsed.se_version, "1.2.3")
+        self.assertEqual(parsed.mcu_version, "2.3.4")
+        self.assertEqual(parsed.mcu_bl_version, "5.6.7")
+        self.assertEqual(parsed.hw_version, "01.00")
+        self.assertEqual(parsed.language, "en")
+        self.assertEqual(parsed._recover_state_len, 0x01)
+        self.assertEqual(parsed.recover_state, 0x02)
+
+    def test_version_info_minimal_build_and_parse(self):
+        # Build a minimal VersionInfo with only required fields
+        payload = utils.VersionInfo.build(
+            dict(
+                target_id=0x31100004,
+                se_version="0",
+                flags=0,
+                mcu_version="0",
+            )
+        )
+
+        parsed = utils.VersionInfo.parse(payload)
+        self.assertEqual(int(parsed.target_id), 0x31100004)
+        self.assertEqual(parsed.se_version, "0")
+        self.assertEqual(parsed.mcu_version, "0")
+        self.assertIsNone(parsed.mcu_bl_version)
+        # When target_id is not Nano X, hw_version is an empty bytes Const
+        self.assertEqual(parsed.hw_version, b"")
+        self.assertIsNone(parsed.language)
+        self.assertIsNone(parsed._recover_state_len)
+        self.assertIsNone(parsed.recover_state)
