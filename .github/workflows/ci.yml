@@ -6,10 +6,10 @@ on:
     tags:
       - '*'
     branches:
-      - master
+      - stable_protobuf_version
   pull_request:
     branches:
-      - master
+      - stable_protobuf_version
 
 jobs:
   build_install_test:
@@ -51,6 +51,10 @@ jobs:
 
     - name: Install dependencies
       run: |
+        # Needed to workaround this bug https://github.com/pypa/setuptools/issues/4759
+        # To be removed when it's fixed
+        pip install -U packaging
+        
         python -m pip install pip --upgrade
         pip install build twine
 

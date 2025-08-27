@@ -201,6 +201,8 @@ def icon_from_file(image_file: str, device: str, api_level: Optional[int]) -> by
     if get_device_name(int(device, 16)) in [
         DeviceNames.LEDGER_STAX.value,
         DeviceNames.LEDGER_FLEX.value,
+        DeviceNames.LEDGER_APEX_P.value,
+        DeviceNames.LEDGER_APEX_M.value,
     ]:
         image_data = _image_to_buffer_nbgl(im, True, False)
 

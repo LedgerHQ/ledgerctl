@@ -11,11 +11,11 @@ name = "ledgerwallet"
 authors = [
     {name = "Ledger", email = "hello@ledger.fr" }
 ]
-description = "Library to communicate with Ledger Nano S/X and Speculos"
+description = "Library to communicate with Ledger devices and Speculos"
 readme = {file = "README.md", content-type = "text/markdown"}
-license = { file = "LICENSE" }
+license = "MIT"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
+    "MIT",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
