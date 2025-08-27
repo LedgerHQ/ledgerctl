@@ -15,7 +15,6 @@ description = "Library to communicate with Ledger devices and Speculos"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = "MIT"
 classifiers = [
-    "MIT",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
