@@ -22,6 +22,8 @@ class DeviceNames(Enum):
     LEDGER_BLUE = "Ledger Blue"
     LEDGER_STAX = "Ledger Stax"
     LEDGER_FLEX = "Ledger Flex"
+    LEDGER_APEX_P = "Ledger Apex P"
+    LEDGER_APEX_M = "Ledger Apex M"
 
 
 class LedgerIns(IntEnum):
@@ -103,6 +105,8 @@ def get_device_name(target_id: int) -> str:
         0x33100004: DeviceNames.LEDGER_NANO_SP.value,
         0x33200004: DeviceNames.LEDGER_STAX.value,
         0x33300004: DeviceNames.LEDGER_FLEX.value,
+        0x33400004: DeviceNames.LEDGER_APEX_P.value,
+        0x33500004: DeviceNames.LEDGER_APEX_M.value,
     }
     return target_ids.get(target_id, "Unknown device")
 

@@ -11,7 +11,7 @@ name = "ledgerwallet"
 authors = [
     {name = "Ledger", email = "hello@ledger.fr" }
 ]
-description = "Library to communicate with Ledger Nano S/X and Speculos"
+description = "Library to communicate with Ledger devices and Speculos"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = { file = "LICENSE" }
 classifiers = [
