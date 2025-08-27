@@ -13,9 +13,8 @@ authors = [
 ]
 description = "Library to communicate between the Ledger devices (Nano S/S+/X, Stax, Flex, Apex P and Apex M) and Speculos"
 readme = {file = "README.md", content-type = "text/markdown"}
-license = { file = "LICENSE" }
+license = "MIT"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
