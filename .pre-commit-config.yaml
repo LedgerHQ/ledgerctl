@@ -33,7 +33,7 @@ repos:
           - types-toml
 
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.4
+    rev: 1.8.6
     hooks:
       - id: bandit
         args:
