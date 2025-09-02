@@ -39,7 +39,8 @@ jobs:
       run: pip install -r tests/unit/requirements.txt
 
     - name: Check that the executable runs correctly
-      run: ledgerctl
+      run: |
+        ledgerctl --help
 
     - name: Run unit tests
       run: pytest --cov ledgerwallet --cov-report term --cov-report=xml tests/unit/
