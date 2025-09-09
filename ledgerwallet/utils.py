@@ -2,16 +2,17 @@ import logging
 from enum import Enum, IntEnum
 
 from construct import (
-    Bytes,
     Const,
     FlagsEnum,
     Hex,
+    IfThenElse,
     Int8ub,
     Int32ub,
     Int32ul,
     Optional,
     PascalString,
     Struct,
+    this,
 )
 
 
@@ -74,7 +75,15 @@ VersionInfo = Struct(
         pin_validated=128,
     ),
     mcu_version=PascalString(Int8ub, "utf-8"),
-    mcu_hash=Optional(Bytes(32)),
+    mcu_bl_version=Optional(PascalString(Int8ub, "utf-8")),
+    hw_version=Optional(
+        IfThenElse(
+            this.target_id == 0x33000004, PascalString(Int8ub, "utf-8"), Const(b"")
+        )
+    ),
+    language=Optional(PascalString(Int8ub, "utf-8")),
+    _recover_state_len=Optional(Hex(Int8ub)),
+    recover_state=Optional(Hex(Int8ub)),
 )
 
 
