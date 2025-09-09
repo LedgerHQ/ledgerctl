@@ -36,8 +36,8 @@ class UtilsModuleTest(TestCase):
                 flags=0,
                 mcu_version="2.3.4",
                 mcu_bl_version="5.6.7",
-                hw_version="01.00",
-                language="en",
+                hw_version="\x01",  # 01.00
+                language="\x00",  # en
                 _recover_state_len=0x01,
                 recover_state=0x02,
             )
@@ -48,8 +48,8 @@ class UtilsModuleTest(TestCase):
         self.assertEqual(parsed.se_version, "1.2.3")
         self.assertEqual(parsed.mcu_version, "2.3.4")
         self.assertEqual(parsed.mcu_bl_version, "5.6.7")
-        self.assertEqual(parsed.hw_version, "01.00")
-        self.assertEqual(parsed.language, "en")
+        self.assertEqual(parsed.hw_version, "\x01")
+        self.assertEqual(parsed.language, "\x00")
         self.assertEqual(parsed._recover_state_len, 0x01)
         self.assertEqual(parsed.recover_state, 0x02)
 
