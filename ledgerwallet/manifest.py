@@ -260,6 +260,7 @@ class AppManifest(ABC):
     def serialize_derivation_path(self, value):
         derivation_paths: Dict[str, Optional[int]] = {
             "paths": None,
+            "paths_slip21": None,
             "curve": None,
         }
         for derivation_entry in value:
@@ -272,9 +273,13 @@ class AppManifest(ABC):
                         curves |= params.CURVE_PRIME256R1
                     elif curve == "ed25519":
                         curves |= params.CURVE_ED25519
+                    elif curve == "slip21":
+                        curves |= params.CURVE_SLIP21
                     elif curve == "bls12381g1":
                         curves |= params.CURVE_BLS12381G1
                     derivation_paths["curve"] = curves
             elif derivation_entry == "paths":
                 derivation_paths["paths"] = value["paths"]
+            elif derivation_entry == "paths_slip21":
+                derivation_paths["paths_slip21"] = value["paths_slip21"]
         return derivation_paths
