@@ -66,6 +66,69 @@ class Asn1Length(Construct):
         return "asn1_der_len"
 
 
+# A byte with value < 0x80
+@singleton
+class LowByte(Construct):
+    def _parse(self, stream, context, path):
+        b = byte2int(stream_read(stream, 1, path))
+        if b >= 0x80:
+            raise IntegerError("BIP32 path length prefix must be < 0x80")
+        return b
+
+    def _build(self, obj, stream, context, path):
+        if not isinstance(obj, int):
+            raise IntegerError("length must be an integer")
+        if not (0 <= obj < 0x80):
+            raise IntegerError("BIP32 path length must be < 0x80")
+        stream_write(stream, int2byte(obj), 1, path)
+        return obj
+
+
+# A byte with value >= 0x80, decoded as (byte - 0x80)
+# This is used to encode the length of SLIP-21 paths
+@singleton
+class Slip21LenByte(Construct):
+    def _parse(self, stream, context, path):
+        b = byte2int(stream_read(stream, 1, path))
+        if b < 0x80:
+            raise IntegerError("SLIP-21 length prefix must be >= 0x80")
+        return b - 0x80
+
+    def _build(self, obj, stream, context, path):
+        if not isinstance(obj, int):
+            raise IntegerError("length must be an integer")
+        if not (0 <= obj <= 0x7F):
+            raise IntegerError("SLIP-21 decoded length must be in [0, 0x7F]")
+        stream_write(stream, int2byte(0x80 + obj), 1, path)
+        return obj
+
+
+class Slip21PathAdapter(Adapter):
+    def _decode(self, obj, context, path):
+        # obj is now a list/array of bytes (ints 0–255)
+        if not obj:
+            return str()
+
+        # First byte must be zero prefix
+        if obj[0] != 0x00:
+            raise IntegerError("invalid SLIP-21 path prefix")
+
+        # Remaining bytes are UTF-8 chars
+        return bytes(obj[1:]).decode("utf-8")
+
+    def _encode(self, obj, context, path):
+        if not isinstance(obj, str):
+            raise IntegerError("SLIP-21 path must be a string")
+
+        payload = b"\0" + obj.encode("utf-8")
+        length = len(payload)
+        if length > 0x7F:
+            raise IntegerError("SLIP-21 path too long")
+
+        # Return list of ints so PrefixedArray(Slip21LenByte, Byte) can handle it
+        return list(payload)
+
+
 # noinspection PyAbstractClass
 class Bip32PathAdapter(Adapter):
     def _decode(self, obj, context, path):
@@ -90,7 +153,8 @@ class Bip32PathAdapter(Adapter):
         return out
 
 
-Bip32Path = Bip32PathAdapter(PrefixedArray(Byte, Int32ub))
+Bip32Path = Bip32PathAdapter(PrefixedArray(LowByte, Int32ub))
+Slip21Path = Slip21PathAdapter(PrefixedArray(Slip21LenByte, Byte))
 
 PrefixedString = PascalString(Asn1Length, "utf8")
 
@@ -101,6 +165,9 @@ Icon = Prefixed(Asn1Length, GreedyBytes)
 CURVE_SECP256K1 = 1
 CURVE_PRIME256R1 = 2
 CURVE_ED25519 = 4
+CURVE_SLIP21 = (
+    8  # not really a curve, but used to indicate the presence of SLIP-21 paths
+)
 CURVE_BLS12381G1 = 16
 
 Curve = FlagsEnum(
@@ -108,11 +175,17 @@ Curve = FlagsEnum(
     secp256k1=CURVE_SECP256K1,
     prime256r1=CURVE_PRIME256R1,
     ed25519=CURVE_ED25519,
+    slip21=CURVE_SLIP21,
     bls12381g1=CURVE_BLS12381G1,
 )
 
 DerivationPath = Prefixed(
-    Asn1Length, Struct(curve=Curve, paths=Optional(GreedyRange(Bip32Path)))
+    Asn1Length,
+    Struct(
+        curve=Curve,
+        paths=Optional(GreedyRange(Bip32Path)),
+        paths_slip21=Optional(GreedyRange(Slip21Path)),
+    ),
 )
 
 Dependency = Prefixed(
@@ -163,8 +236,9 @@ def main():
             {
                 "type_": "BOLOS_TAG_DERIVEPATH",
                 "value": {
-                    "curve": Curve.prime256r1 | Curve.ed25519,
+                    "curve": Curve.prime256r1 | Curve.ed25519 | Curve.slip21,
                     "paths": ["44'/535348'", "13'", "17'"],
+                    "paths_slip21": ["MYPATH"],
                 },
             },
         ]
@@ -175,8 +249,9 @@ def main():
         b"\x02\x05\x30\x2E\x30\x2E\x34\x03\x29\x01\x00\x00\x00\x00\xFF"
         b"\xFF\xFF\x00\x00\x18\xFC\x24\x02\x24\x0A\x24\x1A\x7E\x32\x66"
         b"\x62\x6E\x62\x7E\x32\x00\x1A\x40\x0A\x5F\x02\x5F\x02\x40\x02"
-        b"\x40\xFE\x7F\x00\x00\x04\x14\x06\x02\x80\x00\x00\x2C\x80\x08"
-        b"\x2B\x34\x01\x80\x00\x00\x0D\x01\x80\x00\x00\x11"
+        b"\x40\xFE\x7F\x00\x00\x04\x1c\x0E\x02\x80\x00\x00\x2C\x80\x08"
+        b"\x2B\x34\x01\x80\x00\x00\x0D\x01\x80\x00\x00\x11\x87\x00\x4D"
+        b"\x59\x50\x41\x54\x48"
     )
     assert params1 == params2
 
