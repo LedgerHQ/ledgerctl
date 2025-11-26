@@ -141,6 +141,9 @@ class Bip32PathAdapter(Adapter):
         return "/".join(out)
 
     def _encode(self, obj, context, path):
+        if obj == "":
+            # empty path
+            return list()
         out = list()
         elements = obj.split("/")
         if elements[0] == "m":
@@ -244,7 +247,7 @@ def main():
         ]
     )
 
-    params2 = (
+    params1_expected = (
         b"\x01\x0D\x53\x53\x48\x2F\x50\x47\x50\x20\x41\x67\x65\x6E\x74"
         b"\x02\x05\x30\x2E\x30\x2E\x34\x03\x29\x01\x00\x00\x00\x00\xFF"
         b"\xFF\xFF\x00\x00\x18\xFC\x24\x02\x24\x0A\x24\x1A\x7E\x32\x66"
@@ -253,7 +256,38 @@ def main():
         b"\x2B\x34\x01\x80\x00\x00\x0D\x01\x80\x00\x00\x11\x87\x00\x4D"
         b"\x59\x50\x41\x54\x48"
     )
-    assert params1 == params2
+    assert params1 == params1_expected
+
+    params2 = AppParams.build(
+        [
+            {"type_": "BOLOS_TAG_APPNAME", "value": "Vanadium"},
+            {"type_": "BOLOS_TAG_APPVERSION", "value": "0.0.1"},
+            {
+                "type_": "BOLOS_TAG_ICON",
+                "value": (
+                    b"\x01\x00\x00\x00\x00\xFF\xFF\xFF\x00\x00\x18\xFC\x24\x02"
+                    b"\x24\x0A\x24\x1A\x7E\x32\x66\x62\x6E\x62\x7E\x32\x00\x1A"
+                    b"\x40\x0A\x5F\x02\x5F\x02\x40\x02\x40\xFE\x7F\x00\x00"
+                ),
+            },
+            {
+                "type_": "BOLOS_TAG_DERIVEPATH",
+                "value": {
+                    "curve": Curve.secp256k1 | Curve.slip21,
+                    "paths": [""],
+                    "paths_slip21": ["VANADIUM"],
+                },
+            },
+        ]
+    )
+    params2_expected = (
+        b"\x01\x08\x56\x61\x6E\x61\x64\x69\x75\x6D\x02\x05\x30\x2E\x30"
+        b"\x2E\x31\x03\x29\x01\x00\x00\x00\x00\xFF\xFF\xFF\x00\x00\x18"
+        b"\xFC\x24\x02\x24\x0A\x24\x1A\x7E\x32\x66\x62\x6E\x62\x7E\x32"
+        b"\x00\x1A\x40\x0A\x5F\x02\x5F\x02\x40\x02\x40\xFE\x7F\x00\x00"
+        b"\x04\x0C\x09\x00\x89\x00\x56\x41\x4E\x41\x44\x49\x55\x4D"
+    )
+    assert params2 == params2_expected
 
 
 if __name__ == "__main__":
