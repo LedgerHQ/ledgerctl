@@ -4,6 +4,7 @@ from construct import (
     Adapter,
     Byte,
     Construct,
+    Default,
     Enum,
     FlagsEnum,
     GreedyBytes,
@@ -137,7 +138,10 @@ class Bip32PathAdapter(Adapter):
             if element & 0x80000000:
                 out.append(str(element & 0x7FFFFFFF) + "'")
             else:
-                out.append(str(element))
+                if element == 0x7FFFFFFF:
+                    out.append("*")
+                else:
+                    out.append(str(element))
         return "/".join(out)
 
     def _encode(self, obj, context, path):
@@ -151,8 +155,21 @@ class Bip32PathAdapter(Adapter):
         for element in elements:
             if element.endswith("'"):
                 out.append(0x80000000 | int(element[:-1]))
+            elif element == "*":
+                out.append(0x7FFFFFFF)
             else:
-                out.append(int(element))
+                value = int(element)
+                if value == 0x7FFFFFFF:
+                    raise ValueError(
+                        f"Invalid BIP32 path: {element} value is reserved for wildcard"
+                        " symbol"
+                    )
+                elif value > 0x7FFFFFFF:
+                    raise ValueError(
+                        f"Invalid BIP32 path: {element} value is too large. For"
+                        " hardened paths, use the quote symbol"
+                    )
+                out.append(value)
         return out
 
 
@@ -186,8 +203,8 @@ DerivationPath = Prefixed(
     Asn1Length,
     Struct(
         curve=Curve,
-        paths=Optional(GreedyRange(Bip32Path)),
-        paths_slip21=Optional(GreedyRange(Slip21Path)),
+        paths=Default(GreedyRange(Bip32Path), []),
+        paths_slip21=Default(GreedyRange(Slip21Path), []),
     ),
 )
 
