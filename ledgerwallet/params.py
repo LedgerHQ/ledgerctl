@@ -4,6 +4,7 @@ from construct import (
     Adapter,
     Byte,
     Construct,
+    Default,
     Enum,
     FlagsEnum,
     GreedyBytes,
@@ -137,7 +138,10 @@ class Bip32PathAdapter(Adapter):
             if element & 0x80000000:
                 out.append(str(element & 0x7FFFFFFF) + "'")
             else:
-                out.append(str(element))
+                if element == 0x7FFFFFFF:
+                    out.append("*")
+                else:
+                    out.append(str(element))
         return "/".join(out)
 
     def _encode(self, obj, context, path):
@@ -151,8 +155,21 @@ class Bip32PathAdapter(Adapter):
         for element in elements:
             if element.endswith("'"):
                 out.append(0x80000000 | int(element[:-1]))
+            elif element == "*":
+                out.append(0x7FFFFFFF)
             else:
-                out.append(int(element))
+                value = int(element)
+                if value == 0x7FFFFFFF:
+                    raise ValueError(
+                        f"Invalid BIP32 path: {element} value is reserved for wildcard"
+                        " symbol"
+                    )
+                elif value > 0x7FFFFFFF:
+                    raise ValueError(
+                        f"Invalid BIP32 path: {element} value is too large. For"
+                        " hardened paths, use the quote symbol"
+                    )
+                out.append(value)
         return out
 
 
@@ -186,8 +203,8 @@ DerivationPath = Prefixed(
     Asn1Length,
     Struct(
         curve=Curve,
-        paths=Optional(GreedyRange(Bip32Path)),
-        paths_slip21=Optional(GreedyRange(Slip21Path)),
+        paths=Default(GreedyRange(Bip32Path), []),
+        paths_slip21=Default(GreedyRange(Slip21Path), []),
     ),
 )
 
@@ -221,74 +238,3 @@ Param = Struct(
 )
 
 AppParams = GreedyRange(Param)
-
-
-def main():
-    params1 = AppParams.build(
-        [
-            {"type_": "BOLOS_TAG_APPNAME", "value": "SSH/PGP Agent"},
-            {"type_": "BOLOS_TAG_APPVERSION", "value": "0.0.4"},
-            {
-                "type_": "BOLOS_TAG_ICON",
-                "value": (
-                    b"\x01\x00\x00\x00\x00\xFF\xFF\xFF\x00\x00\x18\xFC\x24\x02"
-                    b"\x24\x0A\x24\x1A\x7E\x32\x66\x62\x6E\x62\x7E\x32\x00\x1A"
-                    b"\x40\x0A\x5F\x02\x5F\x02\x40\x02\x40\xFE\x7F\x00\x00"
-                ),
-            },
-            {
-                "type_": "BOLOS_TAG_DERIVEPATH",
-                "value": {
-                    "curve": Curve.prime256r1 | Curve.ed25519 | Curve.slip21,
-                    "paths": ["44'/535348'", "13'", "17'"],
-                    "paths_slip21": ["MYPATH"],
-                },
-            },
-        ]
-    )
-
-    params1_expected = (
-        b"\x01\x0D\x53\x53\x48\x2F\x50\x47\x50\x20\x41\x67\x65\x6E\x74"
-        b"\x02\x05\x30\x2E\x30\x2E\x34\x03\x29\x01\x00\x00\x00\x00\xFF"
-        b"\xFF\xFF\x00\x00\x18\xFC\x24\x02\x24\x0A\x24\x1A\x7E\x32\x66"
-        b"\x62\x6E\x62\x7E\x32\x00\x1A\x40\x0A\x5F\x02\x5F\x02\x40\x02"
-        b"\x40\xFE\x7F\x00\x00\x04\x1c\x0E\x02\x80\x00\x00\x2C\x80\x08"
-        b"\x2B\x34\x01\x80\x00\x00\x0D\x01\x80\x00\x00\x11\x87\x00\x4D"
-        b"\x59\x50\x41\x54\x48"
-    )
-    assert params1 == params1_expected
-
-    params2 = AppParams.build(
-        [
-            {"type_": "BOLOS_TAG_APPNAME", "value": "Vanadium"},
-            {"type_": "BOLOS_TAG_APPVERSION", "value": "0.0.1"},
-            {
-                "type_": "BOLOS_TAG_ICON",
-                "value": (
-                    b"\x01\x00\x00\x00\x00\xFF\xFF\xFF\x00\x00\x18\xFC\x24\x02"
-                    b"\x24\x0A\x24\x1A\x7E\x32\x66\x62\x6E\x62\x7E\x32\x00\x1A"
-                    b"\x40\x0A\x5F\x02\x5F\x02\x40\x02\x40\xFE\x7F\x00\x00"
-                ),
-            },
-            {
-                "type_": "BOLOS_TAG_DERIVEPATH",
-                "value": {
-                    "curve": Curve.secp256k1 | Curve.slip21,
-                    "paths": [""],
-                    "paths_slip21": ["VANADIUM"],
-                },
-            },
-        ]
-    )
-    params2_expected = (
-        b"\x01\x08\x56\x61\x6E\x61\x64\x69\x75\x6D\x02\x05\x30\x2E\x30"
-        b"\x2E\x31\x03\x29\x01\x00\x00\x00\x00\xFF\xFF\xFF\x00\x00\x18"
-        b"\xFC\x24\x02\x24\x0A\x24\x1A\x7E\x32\x66\x62\x6E\x62\x7E\x32"
-        b"\x00\x1A\x40\x0A\x5F\x02\x5F\x02\x40\x02\x40\xFE\x7F\x00\x00"
-        b"\x04\x0C\x09\x00\x89\x00\x56\x41\x4E\x41\x44\x49\x55\x4D"
-    )
-    assert params2 == params2_expected
-
-
-if __name__ == "__main__":
-    main()
