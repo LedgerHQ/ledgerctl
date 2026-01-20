@@ -300,7 +300,7 @@ class LedgerClient(object):
     def install_remote_app(
         self, app_path, key_path, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY
     ):
-        script = HsmScript("distributeFirmware11", {"persoKey": key, "scpv2": "dummy"})
+        script = HsmScript("distributeFirmware11", {"persoKey": key}, self.target_id)
         server = HsmServer(script, url)
         self.authenticate(server)
 
@@ -322,7 +322,7 @@ class LedgerClient(object):
         self, firmware_name, firmware_key, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY
     ):
         script = HsmScript(
-            "distributeFirmware11_scan", {"persoKey": key, "scpv2": "dummy"}
+            "distributeFirmware11_scan", {"persoKey": key}, self.target_id
         )
         server = HsmServer(script, url)
         self.authenticate(server)
@@ -346,7 +346,7 @@ class LedgerClient(object):
             offset += 5 + apdu_len
 
     def genuine_check(self, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY):
-        script = HsmScript("checkGenuine", {"persoKey": key, "scpv2": "dummy"})
+        script = HsmScript("checkGenuine", {"persoKey": key}, self.target_id)
         server = HsmServer(script, url)
         self.authenticate(server)
 
@@ -411,7 +411,7 @@ class LedgerClient(object):
         return self._target_id
 
     def list_apps_remote(self, url=LEDGER_HSM_URL, key=LEDGER_HSM_KEY):
-        script = HsmScript("listApps", {"persoKey": key, "scpv2": "dummy"})
+        script = HsmScript("listApps", {"persoKey": key}, self.target_id)
         server = HsmServer(script, url)
         self.authenticate(server)
 
