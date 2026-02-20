@@ -266,7 +266,7 @@ class LedgerClient(object):
         main_address = hex_file.start_addr["EIP"] - hex_file.minaddr()
 
         level = app_manifest.get_api_level(device)
-        if level:
+        if level is not None:
             data = struct.pack(
                 ">BIIIII",
                 level,
