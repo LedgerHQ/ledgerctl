@@ -51,4 +51,3 @@ jobs:
       publish: true
     secrets:
       pypi_token: ${{ secrets.PYPI_PUBLIC_API_TOKEN }}
-
