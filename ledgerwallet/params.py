@@ -172,6 +172,8 @@ CURVE_SLIP21 = (
     8  # not really a curve, but used to indicate the presence of SLIP-21 paths
 )
 CURVE_BLS12381G1 = 16
+CURVE_BLS12377G1 = 32
+CURVE_JUBJUB = 64
 
 Curve = FlagsEnum(
     Byte,
@@ -180,6 +182,8 @@ Curve = FlagsEnum(
     ed25519=CURVE_ED25519,
     slip21=CURVE_SLIP21,
     bls12381g1=CURVE_BLS12381G1,
+    bls12377g1=CURVE_BLS12377G1,
+    jubjub=CURVE_JUBJUB,
 )
 
 DerivationPath = Prefixed(
