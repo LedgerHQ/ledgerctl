@@ -277,6 +277,10 @@ class AppManifest(ABC):
                         curves |= params.CURVE_SLIP21
                     elif curve == "bls12381g1":
                         curves |= params.CURVE_BLS12381G1
+                    elif curve == "bls12377g1":
+                        curves |= params.CURVE_BLS12377G1
+                    elif curve == "jubjub":
+                        curves |= params.CURVE_JUBJUB
                     derivation_paths["curve"] = curves
             elif derivation_entry == "paths":
                 derivation_paths["paths"] = value["paths"]
