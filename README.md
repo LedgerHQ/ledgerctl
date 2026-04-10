@@ -122,7 +122,7 @@ binary = "bin/app_nanosp.hex"
 dataSize = 64
 ```
 
-3. Install with `ledgerctl install app.json`.
+3. Install with `ledgerctl install app.toml`.
 
 If you want to force the deletion of the previous version, run the previous command with the `-f` flag.
 
