@@ -320,7 +320,7 @@ def install_ca(get_client, name, public_key):
             raise
 
 
-@cli.command(help="Delete custom certificate authority.")
+@cli.command(help="Delete custom certificate authority (requires recovery mode).")
 @click.pass_obj
 def delete_ca(get_client):
     try:
